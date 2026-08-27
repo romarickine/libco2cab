@@ -118,7 +118,7 @@ input[type=checkbox] { accent-color: var(--couleur-primaire); width: 17px; heigh
 
 /* === Jauge d'engagement === */
 .zone-jauge-sticky { position: sticky; top: 10px; z-index: 6; margin-bottom: 16px; }
-.jauge-engagement { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.jauge-engagement { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; background: var(--couleur-carte); border: 1px solid var(--couleur-bordure); border-radius: var(--rayon-carte); padding: 18px 20px; box-shadow: var(--ombre-carte); }
 .jauge-svg { width: 150px; flex-shrink: 0; }
 .jauge-texte { flex: 1; min-width: 170px; }
 .jauge-eyebrow { font-size: 12px; color: var(--couleur-discret); font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
