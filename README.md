@@ -1,0 +1,159 @@
+# Lib&CO2
+
+Calculateur d'ordre de grandeur des émissions de gaz à effet de serre pour les
+professionnels libéraux (santé, juridique, conseil, architecture, artisanat
+d'art…). Inspiré de la méthodologie **kinéCO2** (Romaric Maire / MyCO2,
+Carbone 4), généralisée à l'ensemble des professions libérales.
+
+**Statut : prototype (proof of concept).** Les résultats donnés sont des
+ordres de grandeur destinés à éclairer des décisions, pas un bilan carbone
+réglementaire (BEGES).
+
+## Lancer le site
+
+Aucune installation n'est nécessaire (pas de `npm install`, pas de build) :
+le site est en HTML/CSS/JavaScript natif, avec des modules ES6.
+
+Les navigateurs bloquent le chargement de modules ES6 (`import`/`export`)
+depuis un fichier local (`file://`) : il faut servir les fichiers via un
+petit serveur HTTP local. Par exemple, depuis la racine du projet :
+
+```bash
+python3 -m http.server 8000
+# puis ouvrir http://localhost:8000/index.html
+```
+
+ou avec Node.js (`npx serve` ou toute alternative équivalente).
+
+Le site n'a besoin d'une connexion internet que pour une seule ressource
+optionnelle : les polices (Google Fonts). Si elle est indisponible, les
+polices système prennent le relais automatiquement (repli CSS déjà en
+place). **Aucune autre dépendance externe** : les graphiques (répartition,
+évolution) sont dessinés en Canvas natif par `js/graphiques.js`, sans
+librairie tierce ni CDN — choix délibéré pour la fiabilité du site, cohérent
+avec les données codées en dur plutôt qu'interrogées en direct.
+
+## Structure du projet
+
+```
+libco2/
+├── index.html                     # Structure de la page uniquement
+├── css/
+│   ├── variables.css              # Couleurs, typographies, espacements (charte Lib&CO2)
+│   └── style.css                  # Styles de tous les composants
+├── js/
+│   ├── main.js                    # Point d'entrée : état global, orchestration des écrans
+│   ├── ui.js                      # Rendu de toutes les vues (DOM), aucun calcul
+│   ├── calcul.js                  # Calcul pur du bilan carbone et des actions
+│   ├── stockage.js                # Sauvegarde/lecture des bilans (localStorage)
+│   ├── evolution.js               # Construction de la vue "évolution dans le temps"
+│   ├── graphiques.js              # Génération des graphiques (Canvas natif, sans dépendance) et de la jauge
+│   ├── certificat.js              # Génération et téléchargement du certificat PNG
+│   └── data/
+│       ├── facteurs-emission.js   # Tous les facteurs d'émission, familles de métiers, actions
+│       └── zonage-insee.js        # Report modal patientèle + ~35 000 communes (zonage INSEE 2010)
+├── assets/
+│   └── logo/logo-libco2.png       # Logo fourni par l'utilisateur
+└── README.md                      # Ce fichier
+```
+
+Chaque fichier a une seule responsabilité : `calcul.js` ne touche jamais au
+DOM, `ui.js` ne calcule jamais rien lui-même, `stockage.js` est le seul
+fichier à parler à `localStorage`. Si vous cherchez où se trouve une donnée
+ou une logique, ce découpage devrait vous y amener directement.
+
+## Où modifier les facteurs d'émission
+
+Tout se trouve dans **`js/data/facteurs-emission.js`**. Chaque valeur est
+commentée avec une étiquette :
+
+- **`SOURCÉ`** : la valeur est tracée jusqu'au rapport kinéCO2 ou à une
+  source externe identifiée — la source est citée en commentaire.
+- **`ESTIMÉ`** : pas de source directe trouvée ; le raisonnement utilisé pour
+  arriver au chiffre est explicité en commentaire (calcul, analogie, ordre de
+  grandeur usuel) plutôt que de prétendre à une source qui n'existe pas.
+
+Avant de changer une valeur, mettez à jour le commentaire de sourcing associé
+en conséquence — c'est ce qui permet à la prochaine personne de savoir si le
+nouveau chiffre est fiable ou encore à vérifier.
+
+Le zonage géographique (communes → zone de mobilité) est dans
+`js/data/zonage-insee.js` : c'est un fichier volumineux (~35 000 communes,
+zonage INSEE 2010) car les données sont intégrées une fois pour toutes plutôt
+que d'être interrogées via une API — voir le commentaire en tête du fichier
+pour la méthode de classification et ses limites connues.
+
+## Ajouter un nouveau métier
+
+Dans `js/data/facteurs-emission.js`, ajouter un objet au tableau `FAMILLES` :
+
+```js
+{
+  id: "mon_metier",                 // identifiant unique, sans espace
+  label: "Nom affiché de la famille",
+  icon: "mon_metier",                // voir ICONES dans ui.js pour ajouter le glyphe correspondant
+  metiers: ["Métier précis 1", "Métier précis 2"],
+  lieuLabel: "cabinet",              // "cabinet" / "bureau" / "atelier" / "agence"...
+  lieuArticleMon: "mon cabinet", lieuArticleLe: "le cabinet",
+  publicLabel: "clientèle", publicSingulier: "client",
+  acteLabel: "rendez-vous",          // pluriel, utilisé dans les questions
+  uniteActe: "rendez-vous",          // singulier, utilisé dans les résultats
+  motifDeplacement: "autres_motifs_personnels", // motif EMP2019 le plus proche (voir MOTIFS_MODE_SHARE dans zonage-insee.js) — ajuste la répartition entre modes de transport de la patientèle/clientèle
+  consommables: [ { id: "...", label: "...", factor: FE_MONETAIRE.biens_consommables } ],
+  grosMateriel: [ { id: "...", label: "...", factor: FE_GROS_MATERIEL_STANDARD } ],
+}
+```
+
+Aucune autre modification n'est nécessaire : l'assistant (`ui.js`) et le
+calcul (`calcul.js`) lisent `FAMILLES` dynamiquement.
+
+## Ajouter un nouveau poste d'émission
+
+1. Ajouter le facteur d'émission dans `js/data/facteurs-emission.js` (avec
+   son étiquette SOURCÉ/ESTIMÉ).
+2. Ajouter une fonction de calcul dédiée dans `js/calcul.js` (voir les
+   fonctions existantes comme `calculNumerique` pour le modèle à suivre),
+   et l'intégrer dans `calculerBilan`.
+3. Ajouter le poste à `CATEGORIES_META` (pour qu'il apparaisse dans le
+   graphique de répartition).
+4. Ajouter le champ de saisie correspondant dans l'étape concernée de
+   `js/ui.js`.
+5. Si le poste doit avoir des actions de décarbonation associées, les
+   ajouter au tableau `ACTIONS`.
+
+## Sauvegarde et suivi dans le temps
+
+**Mécanisme choisi : `localStorage` du navigateur** (voir `js/stockage.js`
+pour la justification complète et le format de données exact). En résumé :
+
+- Chaque bilan enregistré est horodaté et stocké sous la clé
+  `libco2_bilans_v1` (tableau JSON).
+- Une saisie en cours (non terminée) est sauvegardée automatiquement sous la
+  clé `libco2_brouillon_v1`, et proposée au rechargement de la page.
+- **Limite connue** : les données restent sur l'appareil/navigateur où elles
+  ont été saisies (pas de compte, pas de synchronisation multi-appareil).
+
+**Migration vers un compte utilisateur / stockage serveur** : seul
+`js/stockage.js` a besoin d'être réécrit (remplacer les appels
+`localStorage` par des appels à une API). Les fichiers `main.js`, `ui.js` et
+`evolution.js` consomment uniquement les fonctions exportées par
+`stockage.js` (`enregistrerBilan`, `listerBilans`, `supprimerBilan`,
+`sauvegarderBrouillon`, `lireBrouillon`) et n'ont pas besoin de changer.
+
+## Limites connues du prototype (transparence)
+
+- Plusieurs facteurs d'émission sont des ordres de grandeur estimés, pas des
+  valeurs officielles vérifiées à jour (voir les commentaires `ESTIMÉ` dans
+  `facteurs-emission.js`, en particulier les ratios monétaires
+  `FE_MONETAIRE` et les facteurs numériques `FE_NUMERIQUE`).
+- Le "gros matériel" des familles hors santé réutilise un facteur pensé pour
+  du matériel médical, faute d'équivalent trouvé par métier.
+- Le zonage commune → zone de mobilité approxime trois catégories du zonage
+  INSEE qui n'ont pas d'équivalent direct dans la méthodologie kinéCO2 (voir
+  le commentaire en tête de `zonage-insee.js`).
+- Le motif de déplacement de la patientèle/clientèle (EMP 2019) ne permet pas
+  d'isoler la santé des autres démarches personnelles dans les données SDES
+  publiées : les familles santé et juridique partagent donc le même motif
+  proxy ("autres motifs personnels"), faute de donnée plus précise disponible.
+- Pas de compte utilisateur : l'historique des bilans est local au
+  navigateur utilisé.
