@@ -39,7 +39,7 @@ avec les données codées en dur plutôt qu'interrogées en direct.
 libco2/
 ├── index.html                     # Structure de la page uniquement
 ├── css/
-│   ├── variables.css              # Couleurs, typographies, espacements (charte Lib&CO2)
+│   ├── variables.css              # Couleurs, typographies, espacements (charte Lib&CO2, contrastes WCAG AA)
 │   └── style.css                  # Styles de tous les composants
 ├── js/
 │   ├── main.js                    # Point d'entrée : état global, orchestration des écrans

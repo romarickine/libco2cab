@@ -190,6 +190,7 @@ function attacherRanges(conteneur, onChange) {
 function renderStepProfil(el, { data, famille, ctx }) {
   const p = data.profil;
   el.innerHTML = `
+    <div class="groupe-champs-titre">Votre activité</div>
     <div class="champ">
       <label class="libelle">Famille de métier</label>
       <div class="grille-familles">
@@ -206,6 +207,8 @@ function renderStepProfil(el, { data, famille, ctx }) {
         ${famille.metiers.map((m) => `<option value="${m}" ${m === p.metierId ? "selected" : ""}>${m}</option>`).join("")}
       </select>
     </div>
+    <hr class="separateur" />
+    <div class="groupe-champs-titre">Votre structure</div>
     <div class="champ">
       <label class="libelle">Mode de pratique</label>
       <select class="champ-select" data-champ-select="mode">
@@ -220,6 +223,8 @@ function renderStepProfil(el, { data, famille, ctx }) {
         ${p.mode === "employeur" ? `<div class="champ"><label class="libelle">Salariés (ETP)</label>${champNombreHtml("nbSalaries", p.nbSalaries, { min: 0 })}</div>` : ""}
       </div>` : `<div class="texte-discret" style="margin-top:-12px; margin-bottom:22px; display:flex; gap:5px;">ℹ️ Vous exercez seul(e) : la structure compte 1 praticien (vous-même).</div>`}
 
+    <hr class="separateur" />
+    <div class="groupe-champs-titre">Votre zone géographique</div>
     <div class="champ" id="zone-finder">
       <label class="libelle">Ville de votre activité</label>
       <div class="aide" style="margin-bottom:8px;">Utilisée pour estimer les déplacements de votre patientèle/clientèle, à partir du zonage INSEE en aires urbaines 2010 (le même que celui utilisé par l'Enquête Mobilité des Personnes 2019) — recherche 100% locale, sans connexion requise.</div>
@@ -234,6 +239,8 @@ function renderStepProfil(el, { data, famille, ctx }) {
       </select>
     </div>
 
+    <hr class="separateur" />
+    <div class="groupe-champs-titre">Votre volume d'activité</div>
     <div class="champ">
       <label class="libelle">Nombre total de ${famille.acteLabel} réalisé(e)s par an, pour l'ensemble de ${famille.lieuArticleLe}</label>
       <div class="aide">Ce bilan carbone porte sur l'ensemble de ${famille.lieuArticleLe}, pas seulement sur votre propre activité : additionnez les ${famille.acteLabel} de tous les praticiens de la structure.</div>
@@ -521,7 +528,7 @@ export function renderResultats(root, ctx) {
         </div>
         <div class="zone-canvas-repartition"><canvas id="canvas-repartition"></canvas></div>
         <div class="legende-graphique">
-          ${donneesGraphique.map((d) => `<div class="legende-item"><span class="pastille" style="background:${d.color}"></span><span>${d.label}</span><span class="texte-mono texte-discret">(${fmt(d.value)} kg)</span></div>`).join("")}
+          ${donneesGraphique.map((d) => `<div class="legende-item"><span class="pastille" style="background:${d.color}"></span><span class="libelle-poste">${d.label}</span><span class="valeur-poste">${fmt(d.value)} kg</span></div>`).join("")}
         </div>
         <div style="text-align:center; margin-top:10px;"><button class="bouton-reperes" id="btn-reperes">❓ Quelques repères</button></div>
       </div>

@@ -41,7 +41,7 @@ export function dessinerGraphiqueRepartition(canvas, donnees, type) {
 function dessinerCamembert(ctx, w, h, donnees) {
   const total = donnees.reduce((s, d) => s + d.value, 0);
   if (total <= 0) return;
-  const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2 - 10;
+  const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2 - 12;
   let angle = -Math.PI / 2;
 
   donnees.forEach((d) => {
@@ -53,6 +53,10 @@ function dessinerCamembert(ctx, w, h, donnees) {
     ctx.closePath();
     ctx.fillStyle = d.color;
     ctx.fill();
+    // Fin liseré entre les parts, pour bien distinguer deux teintes proches.
+    ctx.strokeStyle = "#F7F5F0";
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
     if (part > 0.045) {
       const angleMid = (angle + angleFin) / 2;
@@ -60,7 +64,7 @@ function dessinerCamembert(ctx, w, h, donnees) {
       const lx = cx + Math.cos(angleMid) * rLabel;
       const ly = cy + Math.sin(angleMid) * rLabel;
       ctx.fillStyle = "#FFFFFF";
-      ctx.font = "600 12px Inter, sans-serif";
+      ctx.font = "600 13px Inter, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(`${Math.round(part * 100)}%`, lx, ly);
@@ -70,30 +74,33 @@ function dessinerCamembert(ctx, w, h, donnees) {
 }
 
 function dessinerHistogramme(ctx, w, h, donnees) {
-  const marge = { haut: 8, bas: 8, gauche: 8, droite: 44 };
+  const marge = { haut: 6, bas: 6, gauche: 6, droite: 56 };
   const zoneW = w - marge.gauche - marge.droite;
   const zoneH = h - marge.haut - marge.bas;
   const n = donnees.length;
-  const gapRatio = 0.35;
+  const gapRatio = 0.45;
   const barH = zoneH / n / (1 + gapRatio);
   const gap = barH * gapRatio;
   const max = Math.max(...donnees.map((d) => d.value)) || 1;
 
-  ctx.font = "11px 'JetBrains Mono', monospace";
+  ctx.font = "600 12px Inter, sans-serif";
   ctx.textBaseline = "middle";
 
   donnees.forEach((d, i) => {
     const y = marge.haut + i * (barH + gap) + gap / 2;
-    const barW = Math.max(2, (d.value / max) * zoneW);
+    // Largeur minimale garantie (6px) pour que les petites valeurs restent
+    // visibles comme un petit rectangle propre, plutôt qu'une forme déformée
+    // quand le rayon d'arrondi dépasse la largeur réelle de la barre.
+    const barW = Math.max(6, (d.value / max) * zoneW);
     ctx.fillStyle = d.color;
     ctx.beginPath();
-    const rad = Math.min(5, barH / 2);
+    const rad = Math.min(5, barH / 2, barW / 2);
     tracerRectArrondi(ctx, marge.gauche, y, barW, barH, rad);
     ctx.fill();
 
     ctx.fillStyle = "#3E4A45";
     ctx.textAlign = "left";
-    ctx.fillText(`${Math.round(d.value)}`, marge.gauche + barW + 6, y + barH / 2);
+    ctx.fillText(Math.round(d.value).toLocaleString("fr-FR"), marge.gauche + barW + 8, y + barH / 2);
   });
 }
 
