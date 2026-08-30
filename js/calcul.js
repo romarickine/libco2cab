@@ -117,8 +117,8 @@ export function calculAlimentation({ repasParSemaine, partVegetarienne, semaines
 // Entrée : data.services
 // Sortie : { compta, sousTraitance, fret, total } en kgCO2e/an
 export function calculServicesEtFret(s) {
-  const compta = s.servicesAn * FE_MONETAIRE.services_intellectuels;
-  const sousTraitance = s.sousTraitanceAn * FE_MONETAIRE.services_intellectuels;
+  const compta = s.servicesAn * FE_MONETAIRE.services_administratifs;
+  const sousTraitance = s.sousTraitanceAn * FE_MONETAIRE.prestations_specialisees;
   const fret = s.nbColisAn * FE_FRET_COLIS;
   return { compta, sousTraitance, fret, total: compta + sousTraitance + fret };
 }

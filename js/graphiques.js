@@ -64,7 +64,7 @@ function dessinerCamembert(ctx, w, h, donnees) {
       const lx = cx + Math.cos(angleMid) * rLabel;
       const ly = cy + Math.sin(angleMid) * rLabel;
       ctx.fillStyle = "#FFFFFF";
-      ctx.font = "600 13px Inter, sans-serif";
+      ctx.font = "600 13px -apple-system, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(`${Math.round(part * 100)}%`, lx, ly);
@@ -83,7 +83,7 @@ function dessinerHistogramme(ctx, w, h, donnees) {
   const gap = barH * gapRatio;
   const max = Math.max(...donnees.map((d) => d.value)) || 1;
 
-  ctx.font = "600 12px Inter, sans-serif";
+  ctx.font = "600 12px -apple-system, sans-serif";
   ctx.textBaseline = "middle";
 
   donnees.forEach((d, i) => {
@@ -141,7 +141,7 @@ export function dessinerGraphiqueEvolution(canvas, labels, series) {
   const yAt = (v) => marge.haut + zoneH - (v / maxTotal) * zoneH;
 
   ctx.strokeStyle = "#E4E0D6"; ctx.lineWidth = 1;
-  ctx.font = "10px Inter, sans-serif"; ctx.fillStyle = "#8A9490"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.font = "10px -apple-system, sans-serif"; ctx.fillStyle = "#8A9490"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
   for (let g = 0; g <= 4; g++) {
     const v = (maxTotal / 4) * g;
     const y = yAt(v);

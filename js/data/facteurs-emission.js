@@ -64,24 +64,40 @@ export const RATIOS_ENERGIE_PAR_ACTIVITE = {
 
 // --- Numérique ---------------------------------------------------------------
 export const FE_NUMERIQUE = {
-  ordi_fixe_an: 45, // ESTIMÉ — par analogie avec le portable (156 kgCO2e fabrication, majoré ~45% pour poste fixe), amorti 5 ans
-  ordi_portable_an: 30, // SOURCÉ (partiel) — bilan carbone ISLEAN (2019, réf. GreenIT) : 156 kgCO2e fabrication / 5 ans amortissement
+  // SOURCÉ (recoupement) — ordre de grandeur confirmé par une approche
+  // monétaire indépendante : ADEME Base Carbone V23.6, ratio "Produits
+  // informatiques, électroniques et optiques" (0,216 kgCO2e/€, 2023)
+  // appliqué à un prix moyen d'ordinateur de bureau (~800-1200€), amorti
+  // 5 ans → 35 à 52 kgCO2e/an, cohérent avec la valeur retenue.
+  ordi_fixe_an: 45,
+  ordi_portable_an: 30, // SOURCÉ (partiel) — bilan carbone ISLEAN (2019, réf. GreenIT) : 156 kgCO2e fabrication / 5 ans amortissement — cohérent avec le recoupement monétaire (portable ~600-1000€ × 0,216 / 5 ans ≈ 26-43 kg/an)
   ecran_an: 15, // ESTIMÉ — fabrication estimée à ~75 kgCO2e, amortie sur 5 ans
-  usage_an: { faible: 15, moyen: 40, fort: 90 }, // ESTIMÉ — ordres de grandeur qualitatifs (guides de sobriété numérique ADEME/Arcep)
+  usage_an: { faible: 15, moyen: 40, fort: 90 }, // ESTIMÉ — ordres de grandeur qualitatifs (guides de sobriété numérique ADEME/Arcep) ; pas de ratio monétaire ADEME transposable à un "niveau d'usage"
 };
 
 // --- Alimentation --------------------------------------------------------
 export const FE_REPAS = { standard: 2.04, vegetarien: 1.40 }; // SOURCÉ — extrait directement du rapport kinéCO2 (source Agribalyse, ADEME)
 
 // --- Ratios monétaires (kgCO2e / €) ---
+// SOURCÉ — ADEME Base Carbone V23.6, ratios monétaires 2023 (fichier
+// officiel consulté directement, millésime le plus récent disponible).
+// Remplace les précédentes valeurs ESTIMÉES (0,12 et 0,35), qui
+// surestimaient respectivement de ~65% et ~50% les valeurs réelles.
 export const FE_MONETAIRE = {
-  // ESTIMÉ — pas de source directe ; valeur basse (~1/3 de biens_consommables)
-  // reflétant une activité de services peu matérielle. À noter : la
-  // méthodologie Bilan Carbone® déconseille les ratios monétaires génériques
-  // pour ce type d'activité (incertitude ~80%), et l'ADEME a révisé ses
-  // ratios monétaires à la baisse (~-40%) en mars 2025, non recontrôlé ici.
-  services_intellectuels: 0.12,
-  biens_consommables: 0.35, // ESTIMÉ, validation partielle — un bilan carbone publié (Memo Bank) cite 367 kgCO2e/k€ pour ses fournitures, même ordre de grandeur
+  // Moyenne de trois catégories proches (kgCO2e/k€ HT, 2023) : "Services
+  // juridiques et comptables / conseil de gestion" (67) + "Assurance,
+  // réassurance, retraites" (77) + "Services financiers hors assurance" (70)
+  // = 71,3 kgCO2e/k€ → 0,072 kgCO2e/€.
+  services_administratifs: 0.072,
+  // "Autres services spécialisés, scientifiques et techniques", 2023 : 110 kgCO2e/k€.
+  prestations_specialisees: 0.110,
+  // "Services juridiques et comptables / services des sièges sociaux /
+  // conseil de gestion", 2023 : 67 kgCO2e/k€.
+  juridique_conseil_gestion: 0.067,
+  // "Programmation, conseil IT / Services d'information", 2023 : 75 kgCO2e/k€.
+  informatique_conseil: 0.075,
+  // "Autres produits manufacturés", 2023 : 231 kgCO2e/k€.
+  biens_consommables: 0.231,
 };
 
 // SOURCÉ — étude commandée par l'ADEME sur les impacts environnementaux du
@@ -92,14 +108,17 @@ export const FE_FRET_COLIS = 1.0;
 
 // --- Gros matériel & mobilier (immobilisations, amorties sur 5 ans) ---
 // SOURCÉ — repris du rapport kinéCO2, Tableau des immobilisations (sources
-// MyCO2/Decathlon/ADEME Base Carbone V23.7). Équipements médicaux lourds :
-// ~0,19 kgCO2e/€ ; équipements massifs (tables, plateformes) : ~0,72 kgCO2e/€.
-// Amortissement par défaut : 5 ans.
-// LIMITE : ces facteurs, établis pour du matériel médical, sont réutilisés
-// tels quels pour le gros matériel des autres familles (photocopieurs,
-// serveurs, machines-outils...), faute d'équivalent trouvé par métier.
-export const FE_GROS_MATERIEL_STANDARD = 0.19; // kgCO2e/€ — équipements lourds "standard" (kinéCO2/MyCO2)
-export const FE_GROS_MATERIEL_MASSIF = 0.72; // kgCO2e/€ — équipements massifs (kinéCO2/Decathlon)
+// MyCO2/Decathlon/ADEME Base Carbone V23.7) pour le matériel médical :
+// équipements médicaux lourds ~0,19 kgCO2e/€ ; équipements massifs (tables,
+// plateformes) ~0,72 kgCO2e/€. Amortissement par défaut : 5 ans.
+export const FE_GROS_MATERIEL_STANDARD = 0.19; // kgCO2e/€ — équipements médicaux lourds "standard" (kinéCO2/MyCO2) — réservé à la famille santé
+export const FE_GROS_MATERIEL_MASSIF = 0.72; // kgCO2e/€ — équipements médicaux massifs (kinéCO2/Decathlon) — réservé à la famille santé
+// SOURCÉ — ADEME Base Carbone V23.6, ratio monétaire "Machines et
+// équipements", 2023 : 273 kgCO2e/k€ HT → 0,273 kgCO2e/€. Remplace, pour les
+// familles hors santé, l'ancienne réutilisation du facteur médical
+// FE_GROS_MATERIEL_STANDARD (0,19) : une vraie donnée sectorielle générique
+// existait, il n'y avait pas besoin d'emprunter le facteur santé.
+export const FE_GROS_MATERIEL_BUREAU_INDUSTRIEL = 0.273;
 export const FE_MOBILIER = 0.261; // kgCO2e/€ — SOURCÉ, ADEME Base Carbone V23.7, "Meubles et autres biens manufacturés" (extrait du rapport kinéCO2)
 export const DUREE_AMORTISSEMENT_ANS = 5; // SOURCÉ — kinéCO2, Tableau 7 : amortissement des immobilisations par défaut
 
@@ -168,10 +187,10 @@ export const FAMILLES = [
     publicLabel: "clientèle", publicSingulier: "client", acteLabel: "rendez-vous",
     consommables: [
       { id: "impression", label: "Impression, reliure et archivage de dossiers", factor: FE_MONETAIRE.biens_consommables },
-      { id: "documentation", label: "Abonnements documentaires et bases juridiques", factor: FE_MONETAIRE.services_intellectuels },
+      { id: "documentation", label: "Abonnements documentaires et bases juridiques", factor: FE_MONETAIRE.juridique_conseil_gestion },
     ],
     grosMateriel: [
-      { id: "bureautique_lourde", label: "Photocopieurs professionnels, scanners, serveurs d'archivage", factor: FE_GROS_MATERIEL_STANDARD },
+      { id: "bureautique_lourde", label: "Photocopieurs professionnels, scanners, serveurs d'archivage", factor: FE_GROS_MATERIEL_BUREAU_INDUSTRIEL },
     ],
     uniteActe: "rendez-vous",
     motifDeplacement: "autres_motifs_personnels", // EMP2019 : démarches administratives/juridiques, même proxy que la santé faute de mieux
@@ -182,11 +201,11 @@ export const FAMILLES = [
     lieuLabel: "bureau", lieuArticleMon: "mon bureau", lieuArticleLe: "le bureau",
     publicLabel: "clientèle", publicSingulier: "client", acteLabel: "missions",
     consommables: [
-      { id: "licences", label: "Licences logicielles et abonnements SaaS", factor: FE_MONETAIRE.services_intellectuels },
+      { id: "licences", label: "Licences logicielles et abonnements SaaS", factor: FE_MONETAIRE.informatique_conseil },
       { id: "fournitures_bureau", label: "Fournitures de bureau", factor: FE_MONETAIRE.biens_consommables },
     ],
     grosMateriel: [
-      { id: "informatique_lourde", label: "Serveurs, baies informatiques, gros équipement réseau", factor: FE_GROS_MATERIEL_STANDARD },
+      { id: "informatique_lourde", label: "Serveurs, baies informatiques, gros équipement réseau", factor: FE_GROS_MATERIEL_BUREAU_INDUSTRIEL },
     ],
     uniteActe: "mission",
     motifDeplacement: "autres_motifs_professionnels", // EMP2019 : rendez-vous professionnel d'un tiers
@@ -198,10 +217,10 @@ export const FAMILLES = [
     publicLabel: "clientèle", publicSingulier: "client", acteLabel: "rendez-vous",
     consommables: [
       { id: "impression_plans", label: "Impression de plans et maquettes", factor: FE_MONETAIRE.biens_consommables },
-      { id: "logiciels_metier", label: "Logiciels métier (CAO/BIM) et licences", factor: FE_MONETAIRE.services_intellectuels },
+      { id: "logiciels_metier", label: "Logiciels métier (CAO/BIM) et licences", factor: FE_MONETAIRE.informatique_conseil },
     ],
     grosMateriel: [
-      { id: "topo_impression", label: "Scanners 3D, traceurs grand format, stations topographiques", factor: FE_GROS_MATERIEL_STANDARD },
+      { id: "topo_impression", label: "Scanners 3D, traceurs grand format, stations topographiques", factor: FE_GROS_MATERIEL_BUREAU_INDUSTRIEL },
     ],
     uniteActe: "rendez-vous",
     motifDeplacement: "autres_motifs_professionnels", // EMP2019 : rendez-vous professionnel (chantier, client)
@@ -216,7 +235,7 @@ export const FAMILLES = [
       { id: "outillage", label: "Outillage et petit équipement", factor: FE_MONETAIRE.biens_consommables },
     ],
     grosMateriel: [
-      { id: "machines_outils", label: "Machines-outils, fours, presses (> 60 kg)", factor: FE_GROS_MATERIEL_MASSIF },
+      { id: "machines_outils", label: "Machines-outils, fours, presses (> 60 kg)", factor: FE_GROS_MATERIEL_BUREAU_INDUSTRIEL },
     ],
     uniteActe: "commande",
     motifDeplacement: "achats", // EMP2019 : proxy achat/commande d'un bien
@@ -230,7 +249,7 @@ export const FAMILLES = [
       { id: "fournitures_generales", label: "Fournitures et consommables professionnels", factor: FE_MONETAIRE.biens_consommables },
     ],
     grosMateriel: [
-      { id: "gros_equipement", label: "Gros équipement professionnel (> 60 kg)", factor: FE_GROS_MATERIEL_STANDARD },
+      { id: "gros_equipement", label: "Gros équipement professionnel (> 60 kg)", factor: FE_GROS_MATERIEL_BUREAU_INDUSTRIEL },
     ],
     uniteActe: "rendez-vous",
     motifDeplacement: "ensemble", // EMP2019 : moyenne nationale tous motifs (famille générique)

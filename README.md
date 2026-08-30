@@ -25,13 +25,14 @@ python3 -m http.server 8000
 
 ou avec Node.js (`npx serve` ou toute alternative équivalente).
 
-Le site n'a besoin d'une connexion internet que pour une seule ressource
-optionnelle : les polices (Google Fonts). Si elle est indisponible, les
-polices système prennent le relais automatiquement (repli CSS déjà en
-place). **Aucune autre dépendance externe** : les graphiques (répartition,
-évolution) sont dessinés en Canvas natif par `js/graphiques.js`, sans
-librairie tierce ni CDN — choix délibéré pour la fiabilité du site, cohérent
-avec les données codées en dur plutôt qu'interrogées en direct.
+**Aucune dépendance réseau, y compris pour les polices** : la charte utilise
+des polices système natives (voir `css/variables.css`), pas de Google Fonts
+ni aucun autre CDN. Ce choix évite aussi le problème RGPD documenté des
+polices Google (transmission de l'IP du visiteur à Google sans consentement,
+jugée non conforme par un tribunal allemand en 2022). Les graphiques
+(répartition, évolution) sont dessinés en Canvas natif par
+`js/graphiques.js`. Une fois chargé, le site ne fait strictement aucune
+requête vers un service extérieur.
 
 ## Structure du projet
 
@@ -99,7 +100,7 @@ Dans `js/data/facteurs-emission.js`, ajouter un objet au tableau `FAMILLES` :
   acteLabel: "rendez-vous",          // pluriel, utilisé dans les questions
   uniteActe: "rendez-vous",          // singulier, utilisé dans les résultats
   motifDeplacement: "autres_motifs_personnels", // motif EMP2019 le plus proche (voir MOTIFS_MODE_SHARE dans zonage-insee.js) — ajuste la répartition entre modes de transport de la patientèle/clientèle
-  consommables: [ { id: "...", label: "...", factor: FE_MONETAIRE.biens_consommables } ],
+  consommables: [ { id: "...", label: "...", factor: FE_MONETAIRE.biens_consommables } ], // ou .services_administratifs / .prestations_specialisees / .juridique_conseil_gestion / .informatique_conseil selon le poste
   grosMateriel: [ { id: "...", label: "...", factor: FE_GROS_MATERIEL_STANDARD } ],
 }
 ```
@@ -142,12 +143,13 @@ pour la justification complète et le format de données exact). En résumé :
 
 ## Limites connues du prototype (transparence)
 
-- Plusieurs facteurs d'émission sont des ordres de grandeur estimés, pas des
-  valeurs officielles vérifiées à jour (voir les commentaires `ESTIMÉ` dans
-  `facteurs-emission.js`, en particulier les ratios monétaires
-  `FE_MONETAIRE` et les facteurs numériques `FE_NUMERIQUE`).
-- Le "gros matériel" des familles hors santé réutilise un facteur pensé pour
-  du matériel médical, faute d'équivalent trouvé par métier.
+- **Mise à jour août 2026** : les ratios monétaires (`FE_MONETAIRE`) et le
+  gros matériel hors santé sont désormais SOURCÉS sur l'ADEME Base Carbone
+  V23.6 (fichier officiel consulté directement), ce qui a corrigé une
+  surestimation de 40 à 65% sur plusieurs postes. Restent `ESTIMÉ`, sans
+  équivalent ADEME transposable identifié : l'écran (`ecran_an`) et les trois
+  niveaux d'usage numérique (`usage_an`) — voir les commentaires dans
+  `facteurs-emission.js` pour le détail du raisonnement.
 - Le zonage commune → zone de mobilité approxime trois catégories du zonage
   INSEE qui n'ont pas d'équivalent direct dans la méthodologie kinéCO2 (voir
   le commentaire en tête de `zonage-insee.js`).
