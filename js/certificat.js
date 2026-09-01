@@ -74,7 +74,7 @@ function dessinerCertificat(ctx, W, H, logo, { famille, profil, results, nomCabi
   ctx.font = "13px Georgia, serif"; ctx.fillStyle = "#8A9490";
   ctx.fillText("Source des données : calculateur Lib&CO2", W / 2, H - 46);
   ctx.font = "italic 10.5px Georgia, serif";
-  ctx.fillText("Ordre de grandeur indicatif (POC) — méthodologie inspirée de kinéCO2 (MyCO2/Carbone 4) — sources ADEME Base Empreinte", W / 2, H - 26);
+  ctx.fillText("Ordre de grandeur indicatif (POC) — méthodologie inspirée de kinéCO2 (Carbone 4) — sources ADEME Base Empreinte", W / 2, H - 26);
 }
 
 // Génère le certificat et déclenche son téléchargement en PNG.

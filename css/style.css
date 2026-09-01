@@ -139,6 +139,7 @@ input[type=checkbox] { accent-color: var(--couleur-primaire); width: 17px; heigh
 .ligne-action-corps .titre { font-weight: 600; font-size: 15px; line-height: 1.4; }
 .ligne-action-corps .meta { font-size: 13px; color: var(--couleur-discret); margin-top: 5px; line-height: 1.5; }
 .ligne-action-corps .source { font-size: 13px; color: var(--couleur-info); margin-top: 3px; line-height: 1.5; }
+.ligne-action-corps .source a { color: inherit; text-decoration: underline; }
 .ligne-action-resultat { text-align: right; flex-shrink: 0; margin-left: auto; }
 .ligne-action-resultat .kg { font-family: var(--police-mono); font-weight: 700; font-size: 16px; color: var(--couleur-primaire); }
 .badge-cout { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; margin-top: 6px; padding: 3px 9px; border-radius: 999px; display: inline-block; }

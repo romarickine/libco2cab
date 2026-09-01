@@ -25,10 +25,10 @@ export const FE_TRANSPORT = {
   voiture_thermique: { label: "Voiture thermique", value: 0.218, source: "SOURCÉ — ADEME Base Empreinte, voiture particulière moyenne du parc français (amont + usage + fabrication amortie). Recherche de recoupement (2026) : plusieurs sources récentes citent 215-218 g/km pour ce même agrégat, cohérent." },
   voiture_electrique: { label: "Voiture électrique", value: 0.103, source: "SOURCÉ — ADEME Base Empreinte, véhicule électrique cœur de gamme (mix électrique France + fabrication amortie). Recherche de recoupement (2026) : valeur retrouvée à l'identique (0,103 kgCO2e/km) dans plusieurs sources citant explicitement l'ADEME." },
   voiture_hybride: { label: "Voiture hybride", value: 0.16, source: "ESTIMÉ — pas de facteur ADEME dédié pour l'hybride non rechargeable identifié. Valeur choisie à mi-chemin entre voiture thermique (0,218) et voiture électrique (0,103), arrondie à 0,16 ; reflète qu'un hybride classique roule majoritairement en mode thermique mais réduit la consommation en usage urbain. Pas de pondération précise justifiée par une étude — à affiner." },
-  deux_roues: { label: "Deux-roues motorisé", value: 0.09, source: "ESTIMÉ — non re-vérifié contre la Base Empreinte cette session. Ordre de grandeur cohérent avec une consommation de carburant d'un deux-roues (~3-4 L/100 km) environ moitié moindre que celle d'une voiture (~6-7 L/100 km), d'où un facteur voisin de la moitié de la voiture thermique." },
+  deux_roues: { label: "Deux-roues motorisé", value: 0.085, source: "SOURCÉ — ADEME Base Carbone V23.6 : \"Cyclomoteur, Mixte\" (usage urbain/rural moyen), 0,0851 kgCO2e/km, confirme l'ordre de grandeur précédemment estimé (0,09)." },
   velo_meca: { label: "Vélo (mécanique)", value: 0.005, source: "SOURCÉ — extrait directement du rapport méthodologique kinéCO2 (tableau des facteurs d'émission, fabrication amortie)." },
   velo_elec: { label: "Vélo à assistance électrique", value: 0.011, source: "SOURCÉ — extrait directement du rapport méthodologique kinéCO2 (fabrication + électricité de recharge)." },
-  bus: { label: "Bus urbain", value: 0.103, source: "ESTIMÉ — non re-vérifié contre la Base Empreinte cette session (coïncidence avec la valeur voiture électrique à noter, non recontrôlée). Ordre de grandeur usuellement publié pour un bus urbain moyen à taux d'occupation réel (donc plus élevé qu'à pleine charge)." },
+  bus: { label: "Bus urbain", value: 0.122, source: "SOURCÉ — ADEME Base Carbone V23.6 : \"Autobus, Gazole\" (motorisation dominante du parc urbain français), 0,122 kgCO2e/passager.km." },
   metro_tram: { label: "Métro / Tramway", value: 0.005, source: "SOURCÉ — extrait directement du rapport méthodologique kinéCO2." },
   rer_ter: { label: "RER / TER", value: 0.02, source: "ESTIMÉ — non extrait du rapport kinéCO2 pour cet usage générique (congrès/formations ; la matrice de report modal de la patientèle utilise des valeurs RER/TER propres à chaque zone, extraites du rapport). Valeur choisie entre le TGV (0,003, très efficace, longue distance) et un mode routier, reflétant un train régional avec plus d'arrêts et un remplissage variable — ordre de grandeur usuellement publié pour ce type de trajet." },
   tgv: { label: "TGV / grande ligne", value: 0.003, source: "SOURCÉ — extrait directement du rapport méthodologique kinéCO2." },
@@ -41,8 +41,8 @@ export const FE_TRANSPORT = {
 // --- Énergie : kgCO2e par kWh -----------------------------------------------
 export const FE_ENERGIE = {
   electricite: { label: "Électricité (radiateurs/convecteurs)", value: 0.052, source: "SOURCÉ — ADEME Base Empreinte, mix électrique moyen France. Recherche de recoupement (2026) : une publication académique cite explicitement la Base Empreinte à 52,0 gCO2/kWh (millésime 2022). Point de vigilance : ce facteur varie fortement d'une année sur l'autre selon la disponibilité du nucléaire (déjà observé entre ~20 et ~60 gCO2/kWh selon les années) — à recontrôler périodiquement." },
-  gaz: { label: "Gaz naturel", value: 0.227, source: "ESTIMÉ — non re-vérifié contre la Base Empreinte cette session. Valeur usuellement publiée pour la combustion du gaz naturel (PCS, pouvoir calorifique supérieur)." },
-  fioul: { label: "Fioul domestique", value: 0.324, source: "ESTIMÉ — non re-vérifié contre la Base Empreinte cette session. Ordre de grandeur usuellement publié pour la combustion de fioul domestique." },
+  gaz: { label: "Gaz naturel", value: 0.243, source: "SOURCÉ — ADEME Base Carbone V23.6 : \"Gaz naturel, Combustion en chaudière\", 0,243 kgCO2e/kWh." },
+  fioul: { label: "Fioul domestique", value: 0.314, source: "SOURCÉ — ADEME Base Carbone V23.6 : \"Fioul domestique, Combustion en chaudière\", 0,314 kgCO2e/kWh." },
   bois: { label: "Bois / biomasse", value: 0.030, source: "ESTIMÉ — non re-vérifié contre la Base Empreinte cette session. Le bois-énergie est considéré comme faiblement carboné en usage direct (le carbone biogénique brûlé est généralement compensé par la repousse), d'où une valeur nettement plus basse que les autres combustibles." },
   reseau_chaleur: { label: "Réseau de chaleur urbain", value: 0.115, source: "ESTIMÉ — non re-vérifié contre la Base Empreinte cette session. Valeur intermédiaire reflétant un mix de production variable selon les réseaux (part de biomasse, gaz, incinération de déchets) ; l'ADEME publie des facteurs par réseau individuel plus précis que cette moyenne nationale forfaitaire." },
   pac: { label: "Pompe à chaleur (électrique)", value: 0.052, source: "SOURCÉ — même facteur que l'électricité (mix France), car le COP (coefficient de performance) de la pompe à chaleur est déjà reflété dans le nombre de kWh électriques que l'utilisateur renseigne (moins de kWh consommés pour la même chaleur produite)." },
@@ -64,14 +64,20 @@ export const RATIOS_ENERGIE_PAR_ACTIVITE = {
 
 // --- Numérique ---------------------------------------------------------------
 export const FE_NUMERIQUE = {
-  // SOURCÉ (recoupement) — ordre de grandeur confirmé par une approche
-  // monétaire indépendante : ADEME Base Carbone V23.6, ratio "Produits
-  // informatiques, électroniques et optiques" (0,216 kgCO2e/€, 2023)
-  // appliqué à un prix moyen d'ordinateur de bureau (~800-1200€), amorti
-  // 5 ans → 35 à 52 kgCO2e/an, cohérent avec la valeur retenue.
-  ordi_fixe_an: 45,
-  ordi_portable_an: 30, // SOURCÉ (partiel) — bilan carbone ISLEAN (2019, réf. GreenIT) : 156 kgCO2e fabrication / 5 ans amortissement — cohérent avec le recoupement monétaire (portable ~600-1000€ × 0,216 / 5 ans ≈ 26-43 kg/an)
-  ecran_an: 15, // ESTIMÉ — fabrication estimée à ~75 kgCO2e, amortie sur 5 ans
+  // SOURCÉ (archivé) — ADEME Base Carbone V23.6 : "Ordinateur fixe, standard",
+  // 305 kgCO2e/appareil (fabrication), amorti sur 5 ans = 61 kgCO2e/an. Fiche
+  // au statut "Archivé" (méthodologie superseded) mais reste la seule donnée
+  // ADEME nominative retrouvée pour cet équipement précis ; remplace
+  // l'ancienne estimation par analogie (45 kg/an). Cohérent par ailleurs avec
+  // un recoupement monétaire indépendant (ratio "Produits informatiques,
+  // électroniques et optiques", 0,216 kgCO2e/€, appliqué à un prix moyen de
+  // PC de bureau ~800-1200€ / 5 ans ≈ 35-52 kg/an).
+  ordi_fixe_an: 61,
+  ordi_portable_an: 30, // SOURCÉ (partiel) — bilan d'émissions ISLEAN (2019, réf. GreenIT) : 156 kgCO2e fabrication / 5 ans amortissement — cohérent avec le recoupement monétaire (portable ~600-1000€ × 0,216 / 5 ans ≈ 26-43 kg/an)
+  // SOURCÉ — ADEME Base Carbone V23.6 : "Ecran, 21,5 pouces", 222 kgCO2e/unité
+  // (fabrication, statut Valide générique), amorti sur 5 ans = 44 kgCO2e/an.
+  // Remplace l'ancienne estimation par analogie (15 kg/an).
+  ecran_an: 44,
   usage_an: { faible: 15, moyen: 40, fort: 90 }, // ESTIMÉ — ordres de grandeur qualitatifs (guides de sobriété numérique ADEME/Arcep) ; pas de ratio monétaire ADEME transposable à un "niveau d'usage"
 };
 
@@ -98,6 +104,15 @@ export const FE_MONETAIRE = {
   informatique_conseil: 0.075,
   // "Autres produits manufacturés", 2023 : 231 kgCO2e/k€.
   biens_consommables: 0.231,
+  // "Produits pharmaceutiques de base et préparations pharmaceutiques", 2023 :
+  // 194 kgCO2e/k€ → 0,194 kgCO2e/€. Utilisé pour le chiffre d'affaires
+  // médicaments (pharmaciens) et les dépenses de médicaments prescrits.
+  medicaments: 0.194,
+  // "Services de santé humaine", 2023 : 82 kgCO2e/k€ → 0,082 kgCO2e/€.
+  // Utilisé comme proxy pour les actes médicaux prescrits hors médicament
+  // (examens complémentaires, dispositifs médicaux) — catégorie la plus
+  // proche disponible, ces actes n'étant pas des achats de biens manufacturés.
+  actes_medicaux: 0.082,
 };
 
 // SOURCÉ — étude commandée par l'ADEME sur les impacts environnementaux du
@@ -108,10 +123,10 @@ export const FE_FRET_COLIS = 1.0;
 
 // --- Gros matériel & mobilier (immobilisations, amorties sur 5 ans) ---
 // SOURCÉ — repris du rapport kinéCO2, Tableau des immobilisations (sources
-// MyCO2/Decathlon/ADEME Base Carbone V23.7) pour le matériel médical :
+// Decathlon/ADEME Base Carbone V23.7) pour le matériel médical :
 // équipements médicaux lourds ~0,19 kgCO2e/€ ; équipements massifs (tables,
 // plateformes) ~0,72 kgCO2e/€. Amortissement par défaut : 5 ans.
-export const FE_GROS_MATERIEL_STANDARD = 0.19; // kgCO2e/€ — équipements médicaux lourds "standard" (kinéCO2/MyCO2) — réservé à la famille santé
+export const FE_GROS_MATERIEL_STANDARD = 0.19; // kgCO2e/€ — équipements médicaux lourds "standard" (kinéCO2) — réservé à la famille santé
 export const FE_GROS_MATERIEL_MASSIF = 0.72; // kgCO2e/€ — équipements médicaux massifs (kinéCO2/Decathlon) — réservé à la famille santé
 // SOURCÉ — ADEME Base Carbone V23.6, ratio monétaire "Machines et
 // équipements", 2023 : 273 kgCO2e/k€ HT → 0,273 kgCO2e/€. Remplace, pour les
@@ -163,7 +178,7 @@ function emissionsPatienteleParActe(zone) {
 export const FAMILLES = [
   {
     id: "sante", label: "Santé & paramédical", icon: "sante",
-    metiers: ["Kinésithérapeute", "Infirmier(ère) libéral(e)", "Médecin généraliste ou spécialiste", "Chirurgien-dentiste", "Sage-femme", "Orthophoniste", "Orthoptiste", "Ostéopathe / chiropracteur", "Psychologue / psychothérapeute", "Pédicure-podologue", "Diététicien(ne)", "Autre profession de santé"],
+    metiers: ["Kinésithérapeute", "Infirmier(ère) libéral(e)", "Médecin généraliste ou spécialiste", "Chirurgien-dentiste", "Sage-femme", "Orthophoniste", "Orthoptiste", "Ostéopathe / chiropracteur", "Psychologue / psychothérapeute", "Pédicure-podologue", "Diététicien(ne)", "Pharmacien(ne) titulaire d'officine", "Autre profession de santé"],
     lieuLabel: "cabinet", lieuArticleMon: "mon cabinet", lieuArticleLe: "le cabinet",
     publicLabel: "patientèle", publicSingulier: "patient", acteLabel: "séances",
     consommables: [
@@ -279,6 +294,7 @@ export const ACTIONS = [
   { id: "dc1", poste: "deplacements_patientele", titre: "Développer la téléconsultation ou les rendez-vous à distance quand c'est pertinent", source: "ESTIMÉ — principe reconnu de réduction des déplacements induits, non chiffré par une étude.", hasPct: true, defaultPct: 20, maxReduction: 0.3, cost: "gratuit", coutKg: "0 € — organisation" },
   { id: "dc2", poste: "deplacements_patientele", titre: "Inciter la patientèle/clientèle aux mobilités actives (marche, vélo)", source: "SOURCÉ — rapport kinéCO2 : le facteur d'émission des modes actifs est quasi nul comparé à la voiture.", hasPct: true, defaultPct: 20, maxReduction: 0.3, cost: "gratuit", coutKg: "0 € — communication" },
   { id: "dc3", poste: "deplacements_patientele", titre: "Faciliter le covoiturage pour la patientèle/clientèle", source: "SOURCÉ — rapport kinéCO2 : passer d'un taux de remplissage de 1 à 2 divise par 2 les émissions du trajet.", hasPct: true, defaultPct: 25, maxReduction: 0.25, cost: "gratuit", coutKg: "0 € — communication" },
+  { id: "dc4", poste: "deplacements_patientele", titre: "Afficher en salle d'attente une carte isochrone comparant marche/vélo et voiture autour du cabinet", source: "ESTIMÉ — outil de visualisation concret pour appuyer l'action « inciter aux mobilités actives » : le calculateur gratuit \"Tous en mobilité active\" (tous-en-mobilite-active.fr/rapidite) génère une carte des zones plus rapidement accessibles à pied, à vélo ou en vélo électrique qu'en voiture autour d'une adresse donnée. Effet non chiffré par une étude ; estimé par analogie avec les actions de communication déjà présentes.", hasPct: true, defaultPct: 15, maxReduction: 0.12, cost: "gratuit", coutKg: "0 € — carte téléchargeable gratuitement, à imprimer" },
 
   // --- Local professionnel ---
   { id: "lo1", poste: "local", titre: "Ajuster la température de consigne (chauffage l'hiver, climatisation l'été)", source: "SOURCÉ — rapport kinéCO2, citant l'ADEME : chaque degré de consigne modifié réduit les émissions correspondantes d'environ 7% (calcul exact, multiplié par le nombre de degrés choisi).", unit: "degres", defaultDegres: 1, maxReductionParDegre: 0.07, cost: "gratuit", coutKg: "0 € — réglage" },
@@ -319,6 +335,8 @@ export const CATEGORIES_META = {
   alimentation: { label: "Alimentation professionnelle", icon: "alimentation", color: "#4E8FA3" },
   services: { label: "Achats de services", icon: "services", color: "#8A9490" },
   fret: { label: "Fret & livraisons", icon: "fret", color: "#0071C1" },
+  medicaments: { label: "Médicaments & parapharmacie vendus", icon: "materiel", color: "#3E7A63" },
+  prescriptions: { label: "Prescriptions (médicaments & actes)", icon: "materiel", color: "#946620" },
 };
 
 export const COST_WEIGHT = { gratuit: 1, faible: 1.3, investissement: 1.8 };

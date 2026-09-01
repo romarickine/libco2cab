@@ -1,7 +1,7 @@
 /**
  * calcul.js
  * ----------------------------------------------------------------------
- * Fonctions de calcul pur du bilan carbone Lib&CO2. Aucune de ces
+ * Fonctions de calcul pur du bilan d'émissions Lib&CO2. Aucune de ces
  * fonctions ne touche au DOM : elles prennent des données en entrée et
  * renvoient des nombres/objets en sortie, ce qui les rend testables
  * indépendamment de l'interface (voir js/ui.js pour l'affichage).
@@ -123,9 +123,35 @@ export function calculServicesEtFret(s) {
   return { compta, sousTraitance, fret, total: compta + sousTraitance + fret };
 }
 
-// Calcule le bilan carbone complet à partir de l'état du formulaire.
+// Calcule l'empreinte des médicaments et de la parapharmacie vendus par une
+// officine (poste spécifique au métier "Pharmacien(ne) titulaire d'officine").
+// Entrée : { caMedicaments, caParapharmacie } (chiffre d'affaires € HT/an)
+// Sortie : { medicaments, parapharmacie, total } en kgCO2e/an
+export function calculMedicaments({ caMedicaments = 0, caParapharmacie = 0 } = {}) {
+  const medicaments = caMedicaments * FE_MONETAIRE.medicaments;
+  const parapharmacie = caParapharmacie * FE_MONETAIRE.biens_consommables;
+  return { medicaments, parapharmacie, total: medicaments + parapharmacie };
+}
+
+// Calcule l'empreinte des prescriptions (médicaments + actes médicaux
+// prescrits : examens complémentaires, dispositifs) pour les professions de
+// santé habilitées à prescrire. Poste optionnel et distinct du reste du
+// bilan, pour permettre une comparaison à périmètre équivalent entre
+// praticiens prescripteurs et non-prescripteurs (voir affichage résultats).
+// Entrée : { active, depenseMedicaments, depenseActes } (€/an, pour
+//           l'ensemble de la patientèle de la structure)
+// Sortie : { medicaments, actes, total } en kgCO2e/an
+export function calculPrescriptions({ active = false, depenseMedicaments = 0, depenseActes = 0 } = {}) {
+  if (!active) return { medicaments: 0, actes: 0, total: 0 };
+  const medicaments = depenseMedicaments * FE_MONETAIRE.medicaments;
+  const actes = depenseActes * FE_MONETAIRE.actes_medicaux;
+  return { medicaments, actes, total: medicaments + actes };
+}
+
+// Calcule le bilan d'émissions complet à partir de l'état du formulaire.
 // Entrée : data (état complet du formulaire), famille (objet FAMILLES), zone (objet ZONES)
-// Sortie : { parPoste, totalKg, totalT, parActe, detail, nbActesLieuFixe }
+// Sortie : { parPoste, totalKg, totalT, parActe, detail, nbActesLieuFixe,
+//            totalKgHorsPrescriptions, totalTHorsPrescriptions }
 export function calculerBilan(data, famille, zone) {
   const dp = calculDeplacementsPro(data.deplacements);
   const dc = calculDeplacementsPatientele({
@@ -137,6 +163,8 @@ export function calculerBilan(data, famille, zone) {
   const ma = calculMateriel(famille, data.materiel, data.investissements);
   const al = calculAlimentation({ ...data.alimentation, semainesAn: data.deplacements.semainesAn });
   const se = calculServicesEtFret(data.services);
+  const med = calculMedicaments(data.pharmacien);
+  const presc = calculPrescriptions(data.prescriptions);
 
   const parPoste = {
     deplacements_pro: dp.total,
@@ -147,8 +175,11 @@ export function calculerBilan(data, famille, zone) {
     alimentation: al,
     services: se.compta + se.sousTraitance,
     fret: se.fret,
+    medicaments: med.total,
+    prescriptions: presc.total,
   };
   const totalKg = Object.values(parPoste).reduce((a, b) => a + b, 0);
+  const totalKgHorsPrescriptions = totalKg - presc.total;
 
   const detail = {
     domTrav: dp.domTrav, visites: dp.visites, congres: dp.congres,
@@ -158,10 +189,13 @@ export function calculerBilan(data, famille, zone) {
     materiel: ma.detailConsommables, grosMateriel: ma.detailGros, mobilier: ma.mobilier,
     alimentation: al,
     servicesCompta: se.compta, servicesSousTraitance: se.sousTraitance, fret: se.fret,
+    medicamentsVendus: med.medicaments, parapharmacie: med.parapharmacie,
+    prescriptionsMedicaments: presc.medicaments, prescriptionsActes: presc.actes,
   };
 
   return {
     parPoste, totalKg, totalT: totalKg / 1000,
+    totalKgHorsPrescriptions, totalTHorsPrescriptions: totalKgHorsPrescriptions / 1000,
     parActe: data.profil.nbActesAn > 0 ? totalKg / data.profil.nbActesAn : 0,
     detail, nbActesLieuFixe: dc.nbActesLieuFixe,
   };

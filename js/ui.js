@@ -31,7 +31,7 @@ export function renderIntro(root, { onStart }) {
       <img src="assets/logo/logo-libco2.png" alt="Lib&CO2" class="logo-intro" />
       <div class="badge">🌿 Outil pour les professionnels libéraux</div>
       <p class="lead">Estimez, en quelques minutes, l'ordre de grandeur des émissions de gaz à effet de serre de votre activité indépendante — et identifiez les leviers de décarbonation les plus pertinents pour vous.</p>
-      <p class="sub">Méthodologie inspirée de kinéCO2 (Romaric Maire / MyCO2, Carbone 4) — facteurs d'émission ADEME Base Empreinte, report modal de la patientèle/clientèle basé sur l'Enquête Mobilité des Personnes 2019.</p>
+      <p class="sub">Méthodologie inspirée de kinéCO2 (Lib&CO2, Carbone 4) — facteurs d'émission ADEME Base Empreinte, report modal de la patientèle/clientèle basé sur l'Enquête Mobilité des Personnes 2019.</p>
       <button class="bouton bouton-primaire" id="btn-demarrer">Démarrer mon estimation ›</button>
       <div class="grille-features">
         <div class="feature-card"><div>✨</div><div class="titre">5 minutes</div><div class="desc">Un parcours court, pensé pour ne pas vous perdre.</div></div>
@@ -39,7 +39,7 @@ export function renderIntro(root, { onStart }) {
         <div class="feature-card"><div>🏆</div><div class="titre">Jauge d'engagement</div><div class="desc">Visualisez votre trajectoire vers l'Accord de Paris.</div></div>
         <div class="feature-card"><div>✅</div><div class="titre">Plan d'action</div><div class="desc">Des leviers priorisés, avec un ordre de coût.</div></div>
       </div>
-      <p class="mentions">Prototype (proof of concept). Les résultats sont des ordres de grandeur destinés à éclairer vos décisions, pas un bilan carbone réglementaire (BEGES).</p>
+      <p class="mentions">Version bêta-test. Les résultats sont des ordres de grandeur destinés à éclairer vos décisions, pas un bilan d'émissions de gaz à effet de serre réglementaire (BEGES).</p>
       <p class="mentions">🔒 Vos données restent sur votre appareil (aucun serveur, aucun compte) · 📖 Code source ouvert sur <a href="https://github.com/romarickine/libco2cab" target="_blank" rel="noopener" style="color:inherit;">GitHub</a> · <a href="mentions-legales.html" style="color:inherit;">Mentions légales</a></p>
     </div>
   `;
@@ -140,6 +140,8 @@ export function majBadgesEtTotal(resultats) {
     numOrdisFixes: det.numOrdisFixes, numOrdisPortables: det.numOrdisPortables, numEcrans: det.numEcrans, numUsage: det.numUsage,
     mobilier: det.mobilier, alimentation: det.alimentation,
     servicesCompta: det.servicesCompta, servicesSousTraitance: det.servicesSousTraitance, fret: det.fret,
+    medicamentsVendus: det.medicamentsVendus, parapharmacie: det.parapharmacie,
+    prescriptionsMedicaments: det.prescriptionsMedicaments, prescriptionsActes: det.prescriptionsActes,
   };
   Object.entries(simples).forEach(([k, v]) => {
     const elmt = document.querySelector(`[data-badge="${k}"]`);
@@ -244,7 +246,7 @@ function renderStepProfil(el, { data, famille, ctx }) {
     <div class="groupe-champs-titre">Votre volume d'activité</div>
     <div class="champ">
       <label class="libelle">Nombre total de ${famille.acteLabel} réalisé(e)s par an, pour l'ensemble de ${famille.lieuArticleLe}</label>
-      <div class="aide">Ce bilan carbone porte sur l'ensemble de ${famille.lieuArticleLe}, pas seulement sur votre propre activité : additionnez les ${famille.acteLabel} de tous les praticiens de la structure.</div>
+      <div class="aide">Ce bilan d'émissions porte sur l'ensemble de ${famille.lieuArticleLe}, pas seulement sur votre propre activité : additionnez les ${famille.acteLabel} de tous les praticiens de la structure.</div>
       ${champNombreHtml("nbActesAn", p.nbActesAn, { min: 1 })}
     </div>
 
@@ -420,11 +422,40 @@ function renderStepNumerique(el, { data, resultats, ctx }) {
 function renderStepMateriel(el, { data, famille, resultats, ctx }) {
   const inv = data.investissements;
   const det = resultats.detail;
+  const estPharmacien = data.profil.metierId === "Pharmacien(ne) titulaire d'officine";
+  const estSante = famille.id === "sante";
+  const presc = data.prescriptions;
   el.innerHTML = `
     <p class="texte-discret" style="margin-top:-8px; margin-bottom:20px;">Postes adaptés à votre famille de métier (<strong>${famille.label}</strong>). Une estimation en euros dépensés par an suffit.</p>
     ${famille.consommables.map((c) => `
       <div class="champ"><label class="libelle">${c.label}${badgeLive(det.materiel[c.id], `materiel_${c.id}`)}</label>${champNombreHtml(`materiel_${c.id}`, data.materiel[c.id] || 0, { suffix: "€ / an" })}</div>
     `).join("")}
+    ${estPharmacien ? `
+      <hr class="separateur" />
+      <div class="groupe-champs-titre">Médicaments et parapharmacie vendus</div>
+      <p class="texte-discret" style="margin-top:-6px; margin-bottom:16px;">Poste spécifique à l'officine : votre chiffre d'affaires HT, réparti entre médicaments et parapharmacie, chacun avec un facteur d'émission propre.</p>
+      <div class="champ"><label class="libelle">Chiffre d'affaires médicaments (€ HT / an)${badgeLive(det.medicamentsVendus, "medicamentsVendus")}</label>${champNombreHtml("ca_medicaments", data.pharmacien.caMedicaments || 0, { suffix: "€ HT / an" })}</div>
+      <div class="champ"><label class="libelle">Chiffre d'affaires parapharmacie (€ HT / an)${badgeLive(det.parapharmacie, "parapharmacie")}</label>${champNombreHtml("ca_parapharmacie", data.pharmacien.caParapharmacie || 0, { suffix: "€ HT / an" })}</div>
+    ` : ""}
+    ${estSante ? `
+      <hr class="separateur" />
+      <div class="groupe-champs-titre">Prescriptions</div>
+      <div class="encadre-info">
+        <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;">
+          <input type="checkbox" data-champ-case="prescriptionActive" ${presc.active ? "checked" : ""} style="margin-top:3px;" />
+          <span>
+            <span style="font-weight:700; font-size:14px;">Je prescris des médicaments et/ou des actes médicaux (examens, dispositifs)</span>
+            <div style="font-size:12px; color:#5C8A7A; margin-top:4px; line-height:1.5;">En tant que prescripteur, vous avez un levier de décarbonation propre (éco-prescription, déprescription). Ce poste est affiché séparément du reste du bilan, pour rester comparable avec les praticiens qui ne prescrivent pas.</div>
+          </span>
+        </label>
+        ${presc.active ? `
+          <div style="margin-top:18px;">
+            <div class="champ"><label class="libelle">Dépense totale de médicaments prescrits, pour l'ensemble de la patientèle (€ / an)${badgeLive(det.prescriptionsMedicaments, "prescriptionsMedicaments")}</label>${champNombreHtml("presc_medicaments", presc.depenseMedicaments || 0, { suffix: "€ / an" })}</div>
+            <div class="champ"><label class="libelle">Dépense totale d'actes prescrits — examens complémentaires, dispositifs (€ / an)${badgeLive(det.prescriptionsActes, "prescriptionsActes")}</label>${champNombreHtml("presc_actes", presc.depenseActes || 0, { suffix: "€ / an" })}</div>
+            <p class="texte-discret" style="margin-top:-6px;">Une première approche à affiner : utilisez les montants que vous connaissez le mieux (ex. volume de prescriptions habituel), même approximatifs.</p>
+          </div>` : ""}
+      </div>
+    ` : ""}
     <hr class="separateur" />
     <div class="encadre-info">
       <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;">
@@ -445,7 +476,10 @@ function renderStepMateriel(el, { data, famille, resultats, ctx }) {
         </div>` : ""}
     </div>
   `;
-  attacherCases(el, ctx.onChangeInvestissements);
+  attacherCases(el, (f, v) => {
+    if (f === "prescriptionActive") ctx.onChangePrescriptions("active", v);
+    else ctx.onChangeInvestissements(f, v);
+  });
   el.querySelectorAll("[data-champ-nombre]").forEach((input) => {
     input.addEventListener("focus", () => input.select());
     input.addEventListener("input", () => {
@@ -454,6 +488,10 @@ function renderStepMateriel(el, { data, famille, resultats, ctx }) {
       if (key.startsWith("materiel_")) ctx.onChangeMaterielLive(key.replace("materiel_", ""), val);
       else if (key.startsWith("gros_")) ctx.onChangeGrosMaterielLive(key.replace("gros_", ""), val);
       else if (key === "mobilier") ctx.onChangeInvestissementsLive("mobilier", val);
+      else if (key === "ca_medicaments") ctx.onChangePharmacienLive("caMedicaments", val);
+      else if (key === "ca_parapharmacie") ctx.onChangePharmacienLive("caParapharmacie", val);
+      else if (key === "presc_medicaments") ctx.onChangePrescriptionsLive("depenseMedicaments", val);
+      else if (key === "presc_actes") ctx.onChangePrescriptionsLive("depenseActes", val);
     });
   });
 }
@@ -494,11 +532,12 @@ function renderStepServices(el, { data, resultats, ctx }) {
 // ÉCRAN RÉSULTATS
 // ============================================================================
 export function renderResultats(root, ctx) {
-  const { famille, resultats, typeGraphique, actionsCalculees, afficherPlusActions, totalReductionPlan: reducPlan, typeCertificat, nomCabinet } = ctx;
+  const { famille, data, resultats, typeGraphique, actionsCalculees, afficherPlusActions, totalReductionPlan: reducPlan, typeCertificat, nomCabinet } = ctx;
   const topActions = actionsCalculees.slice(0, 5);
   const autresActions = actionsCalculees.slice(5);
   const objectif3ansKg = resultats.totalKg * 0.85;
   const pctReducPlan = resultats.totalKg > 0 ? (reducPlan / resultats.totalKg) * 100 : 0;
+  const aDesPrescriptions = data.prescriptions.active && resultats.parPoste.prescriptions > 0;
 
   const donneesGraphique = Object.entries(resultats.parPoste)
     .filter(([, v]) => v > 0)
@@ -517,6 +556,11 @@ export function renderResultats(root, ctx) {
           <div><div class="chiffre-hero titre-serif">${resultats.totalT.toFixed(2)} <small>tCO2e / an</small></div><div class="sous-legende">Empreinte annuelle de l'ensemble de ${famille.lieuArticleLe}</div></div>
           <div><div class="chiffre-hero titre-serif" style="color:var(--couleur-accent-ambre);">${resultats.parActe.toFixed(1)} <small>kgCO2e</small></div><div class="sous-legende">par ${famille.uniteActe}</div></div>
         </div>
+        ${aDesPrescriptions ? `
+          <div style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.15); font-size:12.5px; line-height:1.5; opacity:0.9;">
+            Dont <strong>${resultats.totalT - resultats.totalTHorsPrescriptions > 0 ? (resultats.parPoste.prescriptions/1000).toFixed(2) : "0.00"} tCO2e/an</strong> lié·es aux prescriptions (médicaments, examens, dispositifs).
+            Empreinte <strong>hors prescriptions : ${resultats.totalTHorsPrescriptions.toFixed(2)} tCO2e/an</strong> — c'est ce chiffre qui reste comparable à un praticien qui ne prescrit pas.
+          </div>` : ""}
       </div>
 
       <div class="carte carte-graphique">
@@ -573,7 +617,7 @@ export function renderResultats(root, ctx) {
 
       <div style="text-align:center; margin-top:16px;"><button class="bouton-lien" id="btn-recommencer">↺ Recommencer une estimation</button></div>
 
-      <p class="mentions">Prototype (POC) — Ordres de grandeur indicatifs, non contractuels. Facteurs d'émission : ADEME Base Empreinte (dernière version disponible), méthodologie inspirée du rapport kinéCO2 (Romaric Maire / MyCO2, Carbone 4). Déplacements de la patientèle/clientèle : Enquête Mobilité des Personnes 2019 (SDES), report modal par zone (zonage INSEE en aires urbaines 2010) ajusté selon le motif de déplacement propre à chaque famille de métier. Référentiels : GHG Protocol, BEGES v5.</p>
+      <p class="mentions">Version bêta-test — Ordres de grandeur indicatifs, non contractuels. Facteurs d'émission : ADEME Base Empreinte (dernière version disponible), méthodologie inspirée du rapport kinéCO2 (Lib&CO2, Carbone 4). Déplacements de la patientèle/clientèle : Enquête Mobilité des Personnes 2019 (SDES), report modal par zone (zonage INSEE en aires urbaines 2010) ajusté selon le motif de déplacement propre à chaque famille de métier. Référentiels : GHG Protocol, BEGES v5.</p>
       <p class="mentions"><a href="mentions-legales.html" style="color:inherit;">Mentions légales</a> · <a href="https://github.com/romarickine/libco2cab" target="_blank" rel="noopener" style="color:inherit;">Code source</a></p>
     </div>
     <div id="zone-modale"></div>
@@ -624,6 +668,16 @@ export function renderResultats(root, ctx) {
   inputObjectif.addEventListener("input", majSimulateur);
 }
 
+// Transforme une URL en clair présente dans un texte de source en lien
+// cliquable (ouverture dans un nouvel onglet) — utilisé pour les actions
+// qui renvoient vers un outil externe (ex. générateur de carte isochrone).
+function lienifier(texte) {
+  return texte.replace(/(https?:\/\/[^\s)]+|(?<=\()[a-z0-9.-]+\.[a-z]{2,}\/[a-z0-9/-]+(?=\)))/gi, (url) => {
+    const href = url.startsWith("http") ? url : `https://${url}`;
+    return `<a href="${href}" target="_blank" rel="noopener">${url}</a>`;
+  });
+}
+
 function ligneActionHtml(a, rang) {
   return `
     <div class="ligne-action">
@@ -633,7 +687,7 @@ function ligneActionHtml(a, rang) {
         <div class="ligne-action-corps">
           <div class="titre">${a.titre}</div>
           <div class="meta">${CATEGORIES_META[a.poste].label} · ${a.coutKg}</div>
-          <div class="source">Source : ${a.source}</div>
+          <div class="source">Source : ${lienifier(a.source)}</div>
           ${a.checked && a.unit === "degres" ? `
             <div class="stepper-degres">
               <div style="font-size:12px; font-weight:600;">Variation de consigne :</div>

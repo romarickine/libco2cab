@@ -38,6 +38,8 @@ export function etatInitial() {
     investissements: { actif: false, mobilier: 0, gros: {} },
     alimentation: { repasParSemaine: 2, partVegetarienne: 30 },
     services: { servicesAn: 3000, sousTraitanceAn: 1000, nbColisAn: 20 },
+    pharmacien: { caMedicaments: 0, caParapharmacie: 0 },
+    prescriptions: { active: false, depenseMedicaments: 0, depenseActes: 0 },
   };
 }
 
@@ -106,6 +108,9 @@ export function render() {
       onChangeAlimentationLive: (f, v) => { etat.data.alimentation[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
       onChangeServices: (f, v) => { etat.data.services[f] = v; sauvegarderBrouillon(etat.data); render(); },
       onChangeServicesLive: (f, v) => { etat.data.services[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
+      onChangePharmacienLive: (f, v) => { etat.data.pharmacien[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
+      onChangePrescriptions: (f, v) => { etat.data.prescriptions[f] = v; sauvegarderBrouillon(etat.data); render(); },
+      onChangePrescriptionsLive: (f, v) => { etat.data.prescriptions[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
       onPrev: () => { if (etat.etapeIndex > 0) { etat.etapeIndex--; sauvegarderBrouillon(etat.data); render(); } },
       onNext: () => {
         if (etat.etapeIndex < ETAPES.length - 1) { etat.etapeIndex++; sauvegarderBrouillon(etat.data); render(); }

@@ -2,12 +2,14 @@
 
 Calculateur d'ordre de grandeur des émissions de gaz à effet de serre pour les
 professionnels libéraux (santé, juridique, conseil, architecture, artisanat
-d'art…). Inspiré de la méthodologie **kinéCO2** (Romaric Maire / MyCO2,
+d'art…). Inspiré de la méthodologie **kinéCO2** (Lib&CO2,
 Carbone 4), généralisée à l'ensemble des professions libérales.
 
-**Statut : prototype (proof of concept).** Les résultats donnés sont des
-ordres de grandeur destinés à éclairer des décisions, pas un bilan carbone
-réglementaire (BEGES).
+**Statut : version bêta-test.** Les résultats donnés sont des ordres de
+grandeur destinés à éclairer des décisions, pas un Bilan d'Émissions de Gaz à
+Effet de Serre réglementaire (BEGES). L'outil vise à démocratiser une
+première approche du BEGES auprès du plus grand nombre de professionnels
+libéraux, à coût quasi nul, pour prioriser une démarche de décarbonation.
 
 ## Lancer le site
 
@@ -45,7 +47,7 @@ libco2/
 ├── js/
 │   ├── main.js                    # Point d'entrée : état global, orchestration des écrans
 │   ├── ui.js                      # Rendu de toutes les vues (DOM), aucun calcul
-│   ├── calcul.js                  # Calcul pur du bilan carbone et des actions
+│   ├── calcul.js                  # Calcul pur du bilan d'émissions et des actions
 │   ├── stockage.js                # Sauvegarde/lecture des bilans (localStorage)
 │   ├── evolution.js               # Construction de la vue "évolution dans le temps"
 │   ├── graphiques.js              # Génération des graphiques (Canvas natif, sans dépendance) et de la jauge
@@ -122,6 +124,25 @@ calcul (`calcul.js`) lisent `FAMILLES` dynamiquement.
 5. Si le poste doit avoir des actions de décarbonation associées, les
    ajouter au tableau `ACTIONS`.
 
+### Cas particulier : postes optionnels, propres à un métier précis
+
+Deux postes ne s'appliquent qu'à certains praticiens et suivent un modèle
+légèrement différent, à réutiliser pour un cas similaire :
+
+- **`medicaments`** — chiffre d'affaires médicaments/parapharmacie, affiché
+  uniquement quand `data.profil.metierId === "Pharmacien(ne) titulaire
+  d'officine"` (voir `renderStepMateriel` dans `js/ui.js`, et
+  `calculMedicaments` dans `js/calcul.js`).
+- **`prescriptions`** — dépenses de médicaments et d'actes prescrits,
+  affiché pour toute la famille santé, activé par une case à cocher
+  (`data.prescriptions.active`). Ce poste est **volontairement exclu** du
+  total "hors prescriptions" affiché en résultats (`totalKgHorsPrescriptions`
+  / `totalTHorsPrescriptions` dans `calculerBilan`), pour permettre une
+  comparaison à périmètre équivalent entre praticiens prescripteurs et non
+  prescripteurs (ex. médecin vs kinésithérapeute). Si vous ajoutez un
+  nouveau poste optionnel similaire, pensez à l'exclure du même total s'il
+  fausserait ce type de comparaison.
+
 ## Sauvegarde et suivi dans le temps
 
 **Mécanisme choisi : `localStorage` du navigateur** (voir `js/stockage.js`
@@ -141,21 +162,28 @@ pour la justification complète et le format de données exact). En résumé :
 `stockage.js` (`enregistrerBilan`, `listerBilans`, `supprimerBilan`,
 `sauvegarderBrouillon`, `lireBrouillon`) et n'ont pas besoin de changer.
 
-## Limites connues du prototype (transparence)
+## Limites connues (transparence)
 
-- **Mise à jour août 2026** : les ratios monétaires (`FE_MONETAIRE`) et le
-  gros matériel hors santé sont désormais SOURCÉS sur l'ADEME Base Carbone
-  V23.6 (fichier officiel consulté directement), ce qui a corrigé une
-  surestimation de 40 à 65% sur plusieurs postes. Restent `ESTIMÉ`, sans
-  équivalent ADEME transposable identifié : l'écran (`ecran_an`) et les trois
-  niveaux d'usage numérique (`usage_an`) — voir les commentaires dans
-  `facteurs-emission.js` pour le détail du raisonnement.
+- **Mise à jour août 2026** : les ratios monétaires (`FE_MONETAIRE`), le
+  gros matériel hors santé, l'ordinateur fixe, l'écran, le bus, les
+  deux-roues, le gaz et le fioul sont désormais SOURCÉS sur l'ADEME Base
+  Carbone V23.6 (fichier officiel consulté directement, y compris certaines
+  fiches au statut "Archivé" faute de mieux, signalé au cas par cas). Reste
+  `ESTIMÉ`, sans équivalent ADEME transposable identifié : les trois
+  niveaux d'usage numérique (`usage_an`, faible/moyen/fort) — voir le
+  commentaire dans `facteurs-emission.js`.
 - Le zonage commune → zone de mobilité approxime trois catégories du zonage
   INSEE qui n'ont pas d'équivalent direct dans la méthodologie kinéCO2 (voir
   le commentaire en tête de `zonage-insee.js`).
 - Le motif de déplacement de la patientèle/clientèle (EMP 2019) ne permet pas
   d'isoler la santé des autres démarches personnelles dans les données SDES
-  publiées : les familles santé et juridique partagent donc le même motif
-  proxy ("autres motifs personnels"), faute de donnée plus précise disponible.
+  publiées (vérifié explicitement : "démarches administratives" y est un
+  sous-motif de "autres motifs personnels", non publié isolément) : les
+  familles santé et juridique partagent donc le même motif proxy, faute de
+  donnée plus précise disponible.
+- Le poste "Prescriptions" (médicaments et actes prescrits) repose sur une
+  première approche volontairement simple (dépense globale déclarée par le
+  praticien), non validée par un professionnel de santé — à affiner si
+  l'outil est déployé à plus grande échelle sur ce poste précis.
 - Pas de compte utilisateur : l'historique des bilans est local au
   navigateur utilisé.
