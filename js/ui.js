@@ -333,9 +333,8 @@ function renderStepDeplacements(el, { data, resultats, ctx }) {
           <option value="avion_long">Avion long-courrier</option>
         </select>
       </div>
-      <div class="champ"><label class="libelle">Distance aller-retour moyenne (km)</label>${champNombreHtml("kmCongresAR", d.kmCongresAR)}</div>
+      <div class="champ"><label class="libelle">Distance aller-retour moyenne (km)${badgeLive(det.congres, "congres")}</label>${champNombreHtml("kmCongresAR", d.kmCongresAR)}</div>
     </div>
-    ${badgeLive(det.congres, "congres")}
   `;
   attacherSelects(el, ctx.onChangeDeplacements);
   attacherChampsNombre(el, ctx.onChangeDeplacementsLive);
@@ -424,7 +423,13 @@ function renderStepMateriel(el, { data, famille, resultats, ctx }) {
   const det = resultats.detail;
   const estPharmacien = data.profil.metierId === "Pharmacien(ne) titulaire d'officine";
   const estSante = famille.id === "sante";
-  const presc = data.prescriptions;
+  // Filet de sécurité : ces deux sections ont été ajoutées après la mise en
+  // production initiale ; un brouillon ou un état sauvegardé antérieur peut
+  // ne pas les contenir. On retombe sur des valeurs neutres plutôt que de
+  // laisser planter le rendu (voir aussi fusionnerAvecDefauts dans main.js,
+  // qui couvre déjà le cas normal de reprise de brouillon).
+  const presc = data.prescriptions || { active: false, depenseMedicaments: 0, depenseActes: 0 };
+  data.pharmacien = data.pharmacien || { caMedicaments: 0, caParapharmacie: 0 };
   el.innerHTML = `
     <p class="texte-discret" style="margin-top:-8px; margin-bottom:20px;">Postes adaptés à votre famille de métier (<strong>${famille.label}</strong>). Une estimation en euros dépensés par an suffit.</p>
     ${famille.consommables.map((c) => `

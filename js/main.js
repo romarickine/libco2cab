@@ -204,13 +204,30 @@ function reinitialiser() {
   render();
 }
 
+// Fusionne un état sauvegardé (brouillon ou bilan historique) avec les
+// valeurs par défaut actuelles, section par section. Indispensable pour
+// rester compatible avec des données enregistrées par une version
+// antérieure de l'outil : si un nouveau champ ou une nouvelle section est
+// ajoutée au formulaire plus tard, un ancien brouillon ne doit jamais faire
+// planter le rendu faute de cette clé — il doit simplement récupérer sa
+// valeur par défaut. Sans cette fusion, l'écran correspondant reste blanc
+// (erreur JS silencieuse en production).
+function fusionnerAvecDefauts(donneesSauvegardees) {
+  const defauts = etatInitial();
+  const fusion = {};
+  for (const section of Object.keys(defauts)) {
+    fusion[section] = { ...defauts[section], ...(donneesSauvegardees[section] || {}) };
+  }
+  return fusion;
+}
+
 // --- Démarrage : propose de reprendre un brouillon de saisie s'il en existe un ---
 function initialiser() {
   const brouillon = lireBrouillon();
   if (brouillon && brouillon.data) {
     ui.renderPropositionBrouillon(racine, {
       date: brouillon.sauvegardeLe,
-      onReprendre: () => { etat.data = brouillon.data; etat.ecran = "wizard"; etat.etapeIndex = 0; render(); },
+      onReprendre: () => { etat.data = fusionnerAvecDefauts(brouillon.data); etat.ecran = "wizard"; etat.etapeIndex = 0; render(); },
       onIgnorer: () => { supprimerBrouillon(); render(); },
     });
   } else {
