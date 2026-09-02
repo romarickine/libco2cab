@@ -544,7 +544,8 @@ export function renderResultats(root, ctx) {
 
   const donneesGraphique = Object.entries(resultats.parPoste)
     .filter(([, v]) => v > 0)
-    .map(([k, v]) => ({ label: CATEGORIES_META[k].label, value: Math.round(v), color: CATEGORIES_META[k].color }));
+    .map(([k, v]) => ({ label: CATEGORIES_META[k].label, value: Math.round(v), color: CATEGORIES_META[k].color }))
+    .sort((a, b) => b.value - a.value);
 
   root.innerHTML = `
     <div class="conteneur">

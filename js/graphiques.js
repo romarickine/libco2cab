@@ -28,24 +28,27 @@ function preparerCanvas(canvas) {
 
 /* ----------------------------------------------------------------------------
    Graphique de répartition par poste — camembert ou histogramme horizontal.
-   Entrée : canvas cible, données [{ label, value, color }], type "pie" | "bar"
+   Entrée : canvas cible, données [{ label, value, color }] (déjà triées par
+   ui.js, du poste le plus important au moins important), type "pie" | "bar"
    (la légende avec les libellés est gérée séparément en HTML par ui.js).
+   Le graphique est interactif : survol souris ou appui tactile affiche une
+   infobulle avec le libellé, le pourcentage et la valeur exacte du poste.
 ---------------------------------------------------------------------------- */
 export function dessinerGraphiqueRepartition(canvas, donnees, type) {
   const { ctx, w, h } = preparerCanvas(canvas);
   if (donnees.length === 0) return;
-  if (type === "pie") dessinerCamembert(ctx, w, h, donnees);
-  else dessinerHistogramme(ctx, w, h, donnees);
+  const total = donnees.reduce((s, d) => s + d.value, 0);
+  const geometrie = type === "pie" ? dessinerCamembert(ctx, w, h, donnees, total) : dessinerHistogramme(ctx, w, h, donnees, total);
+  activerInfobulle(canvas, geometrie);
 }
 
-function dessinerCamembert(ctx, w, h, donnees) {
-  const total = donnees.reduce((s, d) => s + d.value, 0);
-  if (total <= 0) return;
+function dessinerCamembert(ctx, w, h, donnees, total) {
   const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2 - 12;
   let angle = -Math.PI / 2;
+  const items = [];
 
   donnees.forEach((d) => {
-    const part = d.value / total;
+    const part = total > 0 ? d.value / total : 0;
     const angleFin = angle + part * Math.PI * 2;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -58,7 +61,10 @@ function dessinerCamembert(ctx, w, h, donnees) {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    if (part > 0.045) {
+    // Pourcentage affiché sur la part elle-même dès que l'angle est assez
+    // large pour rester lisible ; les parts trop petites restent
+    // consultables via l'infobulle au survol/appui.
+    if (part > 0.025) {
       const angleMid = (angle + angleFin) / 2;
       const rLabel = r * 0.66;
       const lx = cx + Math.cos(angleMid) * rLabel;
@@ -69,11 +75,14 @@ function dessinerCamembert(ctx, w, h, donnees) {
       ctx.textBaseline = "middle";
       ctx.fillText(`${Math.round(part * 100)}%`, lx, ly);
     }
+    items.push({ ...d, part, startAngle: angle, endAngle: angleFin });
     angle = angleFin;
   });
+
+  return { type: "pie", cx, cy, r, items };
 }
 
-function dessinerHistogramme(ctx, w, h, donnees) {
+function dessinerHistogramme(ctx, w, h, donnees, total) {
   const marge = { haut: 6, bas: 6, gauche: 6, droite: 56 };
   const zoneW = w - marge.gauche - marge.droite;
   const zoneH = h - marge.haut - marge.bas;
@@ -86,8 +95,10 @@ function dessinerHistogramme(ctx, w, h, donnees) {
   ctx.font = "600 12px -apple-system, sans-serif";
   ctx.textBaseline = "middle";
 
+  const items = [];
   donnees.forEach((d, i) => {
-    const y = marge.haut + i * (barH + gap) + gap / 2;
+    const rowTop = marge.haut + i * (barH + gap);
+    const y = rowTop + gap / 2;
     // Largeur minimale garantie (6px) pour que les petites valeurs restent
     // visibles comme un petit rectangle propre, plutôt qu'une forme déformée
     // quand le rayon d'arrondi dépasse la largeur réelle de la barre.
@@ -101,7 +112,68 @@ function dessinerHistogramme(ctx, w, h, donnees) {
     ctx.fillStyle = "#3E4A45";
     ctx.textAlign = "left";
     ctx.fillText(Math.round(d.value).toLocaleString("fr-FR"), marge.gauche + barW + 8, y + barH / 2);
+
+    items.push({ ...d, part: total > 0 ? d.value / total : 0, rowTop, rowBottom: rowTop + barH + gap });
   });
+
+  return { type: "bar", w, h, items };
+}
+
+// Attache les gestionnaires souris/tactile à un graphique de répartition
+// (camembert ou histogramme) et affiche une infobulle flottante au survol
+// ou à l'appui, avec le libellé, le pourcentage et la valeur du poste
+// concerné. Le conteneur direct du canvas doit être en position:relative
+// (voir .zone-canvas-repartition en CSS) pour que l'infobulle s'y positionne.
+function activerInfobulle(canvas, geometrie) {
+  const conteneur = canvas.parentElement;
+  let tooltip = conteneur.querySelector(".graphique-tooltip");
+  if (!tooltip) {
+    tooltip = document.createElement("div");
+    tooltip.className = "graphique-tooltip";
+    conteneur.appendChild(tooltip);
+  }
+
+  function trouverItem(px, py) {
+    if (geometrie.type === "pie") {
+      const dx = px - geometrie.cx, dy = py - geometrie.cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > geometrie.r) return null;
+      let ang = Math.atan2(dy, dx);
+      if (ang < -Math.PI / 2) ang += Math.PI * 2;
+      return geometrie.items.find((it) => ang >= it.startAngle && ang < it.endAngle) || null;
+    }
+    // histogramme : toute la bande horizontale de la ligne déclenche l'infobulle
+    if (px < 0 || px > geometrie.w) return null;
+    return geometrie.items.find((it) => py >= it.rowTop && py < it.rowBottom) || null;
+  }
+
+  function afficherPourItem(item, clientX, clientY) {
+    if (!item) { tooltip.style.display = "none"; return; }
+    const rectConteneur = conteneur.getBoundingClientRect();
+    tooltip.innerHTML = `<strong>${item.label}</strong><br>${Math.round(item.part * 100)}% · ${item.value.toLocaleString("fr-FR")} kgCO2e`;
+    tooltip.style.display = "block";
+    let x = clientX - rectConteneur.left + 14;
+    let y = clientY - rectConteneur.top + 14;
+    // Évite que l'infobulle ne sorte du cadre du graphique.
+    const maxX = rectConteneur.width - tooltip.offsetWidth - 6;
+    const maxY = rectConteneur.height - tooltip.offsetHeight - 6;
+    if (x > maxX) x = clientX - rectConteneur.left - tooltip.offsetWidth - 14;
+    if (y > maxY) y = Math.max(6, maxY);
+    tooltip.style.left = `${Math.max(6, x)}px`;
+    tooltip.style.top = `${Math.max(6, y)}px`;
+  }
+
+  function gererPointeur(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const item = trouverItem(clientX - rect.left, clientY - rect.top);
+    afficherPourItem(item, clientX, clientY);
+  }
+
+  canvas.addEventListener("mousemove", (e) => gererPointeur(e.clientX, e.clientY));
+  canvas.addEventListener("mouseleave", () => { tooltip.style.display = "none"; });
+  canvas.addEventListener("touchstart", (e) => { e.preventDefault(); const t = e.touches[0]; if (t) gererPointeur(t.clientX, t.clientY); }, { passive: false });
+  canvas.addEventListener("touchmove", (e) => { e.preventDefault(); const t = e.touches[0]; if (t) gererPointeur(t.clientX, t.clientY); }, { passive: false });
+  canvas.addEventListener("touchend", () => { tooltip.style.display = "none"; });
 }
 
 function tracerRectArrondi(ctx, x, y, w, h, r) {
