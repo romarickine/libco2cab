@@ -311,15 +311,13 @@ function renderStepDeplacements(el, { data, resultats, ctx }) {
       <div class="champ"><label class="libelle">Mode de transport principal domicile-travail</label><select class="champ-select" data-champ-select="modeDomTrav">${optionsMode(true)}</select></div>
       <div class="champ"><label class="libelle">Distance aller (km)</label>${champNombreHtml("kmAllerJour", d.kmAllerJour)}</div>
       <div class="champ"><label class="libelle">Jours travaillés / semaine</label>${champNombreHtml("joursSemaine", d.joursSemaine, { step: 0.5 })}</div>
-      <div class="champ"><label class="libelle">Semaines travaillées / an</label>${champNombreHtml("semainesAn", d.semainesAn, { max: 52 })}</div>
+      <div class="champ"><label class="libelle">Semaines travaillées / an${badgeLive(det.domTrav, "domTrav")}</label>${champNombreHtml("semainesAn", d.semainesAn, { max: 52 })}</div>
     </div>
-    <div style="margin-top:-10px; margin-bottom:10px;">${badgeLive(det.domTrav, "domTrav")}</div>
     <hr class="separateur" />
     <div style="display:flex; gap:18px; flex-wrap:wrap;">
       <div class="champ"><label class="libelle">Km parcourus par an en visites professionnelles</label><div class="aide">Domicile de patients/clients, EHPAD, chantiers, rendez-vous extérieurs.</div>${champNombreHtml("kmVisitesAn", d.kmVisitesAn)}</div>
-      <div class="champ"><label class="libelle">Mode de transport principal pour ces visites</label><select class="champ-select" data-champ-select="modeVisites">${optionsMode(true)}</select></div>
+      <div class="champ"><label class="libelle">Mode de transport principal pour ces visites${badgeLive(det.visites, "visites")}</label><select class="champ-select" data-champ-select="modeVisites">${optionsMode(true)}</select></div>
     </div>
-    <div style="margin-top:-10px; margin-bottom:10px;">${badgeLive(det.visites, "visites")}</div>
     <hr class="separateur" />
     <div style="display:flex; gap:18px; flex-wrap:wrap;">
       <div class="champ"><label class="libelle">Congrès / formations / représentations par an</label>${champNombreHtml("nbCongresAn", d.nbCongresAn)}</div>
