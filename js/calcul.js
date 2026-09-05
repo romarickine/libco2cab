@@ -9,7 +9,7 @@
  */
 import {
   FE_TRANSPORT, FE_ENERGIE, RATIOS_ENERGIE_PAR_ACTIVITE,
-  FE_NUMERIQUE, FE_REPAS, FE_MONETAIRE, FE_FRET_COLIS, DUREE_AMORTISSEMENT_ANS,
+  FE_NUMERIQUE, FE_REPAS, FE_MONETAIRE, FE_FRET_COLIS, FE_MOBILIER, DUREE_AMORTISSEMENT_ANS,
   ACTIONS, COST_WEIGHT,
 } from "./data/facteurs-emission.js";
 import { emissionsPatienteleParActe } from "./data/zonage-insee.js";
@@ -97,7 +97,7 @@ export function calculMateriel(famille, materiel, investissements) {
       detailGros[g.id] = kg;
       totalGros += kg;
     });
-    mobilier = (investissements.mobilier * 0.261) / DUREE_AMORTISSEMENT_ANS; // FE_MOBILIER
+    mobilier = (investissements.mobilier * FE_MOBILIER) / DUREE_AMORTISSEMENT_ANS;
   }
 
   return { detailConsommables, detailGros, mobilier, total: totalConsommables + totalGros + mobilier };

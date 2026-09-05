@@ -74,6 +74,21 @@ function majLive() {
   ui.majBadgesEtTotal(resultatsCourants());
 }
 
+// Fabrique la paire de callbacks (rendu complet / mise à jour légère) pour
+// une section donnée de l'état (ex. "profil", "deplacements"...). Remplace
+// ce qui était ~18 callbacks quasi identiques recopiés à la main : chaque
+// nouvelle section n'a plus qu'une ligne à ajouter au lieu de deux.
+// getSection/setSection permettent de cibler une sous-clé imbriquée (ex.
+// investissements.gros) quand la section n'est pas directement à la racine
+// de etat.data.
+function creerCallbacksChamp(getSection) {
+  const appliquer = (f, v) => { getSection()[f] = v; sauvegarderBrouillon(etat.data); };
+  return {
+    complet: (f, v) => { appliquer(f, v); render(); },
+    live: (f, v) => { appliquer(f, v); majLive(); },
+  };
+}
+
 export function render() {
   const actif = document.activeElement;
   const champActif = actif && actif.dataset ? actif.dataset.field : null;
@@ -82,35 +97,37 @@ export function render() {
   if (etat.ecran === "intro") {
     ui.renderIntro(racine, { onStart: demarrer });
   } else if (etat.ecran === "wizard") {
+    const profil = creerCallbacksChamp(() => etat.data.profil);
+    const deplacements = creerCallbacksChamp(() => etat.data.deplacements);
+    const local = creerCallbacksChamp(() => etat.data.local);
+    const numerique = creerCallbacksChamp(() => etat.data.numerique);
+    const materiel = creerCallbacksChamp(() => etat.data.materiel);
+    const investissements = creerCallbacksChamp(() => etat.data.investissements);
+    const grosMateriel = creerCallbacksChamp(() => etat.data.investissements.gros);
+    const alimentation = creerCallbacksChamp(() => etat.data.alimentation);
+    const services = creerCallbacksChamp(() => etat.data.services);
+    const pharmacien = creerCallbacksChamp(() => etat.data.pharmacien);
+    const prescriptions = creerCallbacksChamp(() => etat.data.prescriptions);
+
     ui.renderWizard(racine, {
       data: etat.data, etapes: ETAPES, etapeIndex: etat.etapeIndex,
       famille: familleActuelle(), zone: zoneActuelle(), resultats: resultatsCourants(),
-      onChangeProfil: (f, v) => { etat.data.profil[f] = v; sauvegarderBrouillon(etat.data); render(); },
-      onChangeProfilLive: (f, v) => { etat.data.profil[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
+      onChangeProfil: profil.complet, onChangeProfilLive: profil.live,
       onChangeFamille: (fid) => {
         const f = FAMILLES.find((x) => x.id === fid);
         etat.data.profil.familleId = fid; etat.data.profil.metierId = f.metiers[0];
         etat.data.materiel = {}; sauvegarderBrouillon(etat.data); render();
       },
-      onChangeDeplacements: (f, v) => { etat.data.deplacements[f] = v; sauvegarderBrouillon(etat.data); render(); },
-      onChangeDeplacementsLive: (f, v) => { etat.data.deplacements[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
-      onChangeLocal: (f, v) => { etat.data.local[f] = v; sauvegarderBrouillon(etat.data); render(); },
-      onChangeLocalLive: (f, v) => { etat.data.local[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
-      onChangeNumerique: (f, v) => { etat.data.numerique[f] = v; sauvegarderBrouillon(etat.data); render(); },
-      onChangeNumeriqueLive: (f, v) => { etat.data.numerique[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
-      onChangeMateriel: (id, v) => { etat.data.materiel[id] = v; sauvegarderBrouillon(etat.data); render(); },
-      onChangeMaterielLive: (id, v) => { etat.data.materiel[id] = v; sauvegarderBrouillon(etat.data); majLive(); },
-      onChangeInvestissements: (f, v) => { etat.data.investissements[f] = v; sauvegarderBrouillon(etat.data); render(); },
-      onChangeInvestissementsLive: (f, v) => { etat.data.investissements[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
-      onChangeGrosMateriel: (id, v) => { etat.data.investissements.gros[id] = v; sauvegarderBrouillon(etat.data); render(); },
-      onChangeGrosMaterielLive: (id, v) => { etat.data.investissements.gros[id] = v; sauvegarderBrouillon(etat.data); majLive(); },
-      onChangeAlimentation: (f, v) => { etat.data.alimentation[f] = v; sauvegarderBrouillon(etat.data); render(); },
-      onChangeAlimentationLive: (f, v) => { etat.data.alimentation[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
-      onChangeServices: (f, v) => { etat.data.services[f] = v; sauvegarderBrouillon(etat.data); render(); },
-      onChangeServicesLive: (f, v) => { etat.data.services[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
-      onChangePharmacienLive: (f, v) => { etat.data.pharmacien[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
-      onChangePrescriptions: (f, v) => { etat.data.prescriptions[f] = v; sauvegarderBrouillon(etat.data); render(); },
-      onChangePrescriptionsLive: (f, v) => { etat.data.prescriptions[f] = v; sauvegarderBrouillon(etat.data); majLive(); },
+      onChangeDeplacements: deplacements.complet, onChangeDeplacementsLive: deplacements.live,
+      onChangeLocal: local.complet, onChangeLocalLive: local.live,
+      onChangeNumerique: numerique.complet, onChangeNumeriqueLive: numerique.live,
+      onChangeMateriel: materiel.complet, onChangeMaterielLive: materiel.live,
+      onChangeInvestissements: investissements.complet, onChangeInvestissementsLive: investissements.live,
+      onChangeGrosMateriel: grosMateriel.complet, onChangeGrosMaterielLive: grosMateriel.live,
+      onChangeAlimentation: alimentation.complet, onChangeAlimentationLive: alimentation.live,
+      onChangeServices: services.complet, onChangeServicesLive: services.live,
+      onChangePharmacienLive: pharmacien.live,
+      onChangePrescriptions: prescriptions.complet, onChangePrescriptionsLive: prescriptions.live,
       onPrev: () => { if (etat.etapeIndex > 0) { etat.etapeIndex--; sauvegarderBrouillon(etat.data); render(); } },
       onNext: () => {
         if (etat.etapeIndex < ETAPES.length - 1) { etat.etapeIndex++; sauvegarderBrouillon(etat.data); render(); }

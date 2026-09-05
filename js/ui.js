@@ -32,7 +32,10 @@ export function renderIntro(root, { onStart }) {
       <div class="badge">🌿 Outil pour les professionnels libéraux</div>
       <p class="lead">Estimez, en quelques minutes, l'ordre de grandeur des émissions de gaz à effet de serre de votre activité indépendante — et identifiez les leviers de décarbonation les plus pertinents pour vous.</p>
       <p class="sub">Méthodologie inspirée de kinéCO2 (Lib&CO2, Carbone 4) — facteurs d'émission ADEME Base Empreinte, report modal de la patientèle/clientèle basé sur l'Enquête Mobilité des Personnes 2019.</p>
-      <button class="bouton bouton-primaire" id="btn-demarrer">Démarrer mon estimation ›</button>
+      <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
+        <button class="bouton bouton-primaire" id="btn-demarrer">Démarrer mon estimation ›</button>
+        <a href="pourquoi-compter-le-carbone.html" class="icone-info-tooltip" data-tooltip="Pourquoi compter le carbone ?" aria-label="Pourquoi compter le carbone ?">?</a>
+      </div>
       <div class="grille-features">
         <div class="feature-card"><div>✨</div><div class="titre">5 minutes</div><div class="desc">Un parcours court, pensé pour ne pas vous perdre.</div></div>
         <div class="feature-card"><div>📊</div><div class="titre">8 postes clés</div><div class="desc">Déplacements, local, numérique, matériel, achats…</div></div>
@@ -170,6 +173,25 @@ function attacherChampsNombre(conteneur, onChangeLive) {
     input.addEventListener("input", () => {
       const val = input.value === "" ? 0 : Number(input.value);
       onChangeLive(input.dataset.champNombre, val);
+    });
+  });
+}
+// Variante de attacherChampsNombre pour un conteneur dont les champs
+// numériques doivent être distribués vers PLUSIEURS callbacks différents
+// selon leur identifiant (ex. étape "Matériel", qui mélange consommables,
+// gros matériel, médicaments, prescriptions). `regles` est une liste
+// ordonnée de { prefixe, cb } ou { cle, cb } ; la première règle qui
+// correspond est utilisée, le préfixe étant retiré de l'identifiant transmis.
+function attacherChampsNombreDispatch(conteneur, regles) {
+  conteneur.querySelectorAll("[data-champ-nombre]").forEach((input) => {
+    input.addEventListener("focus", () => input.select());
+    input.addEventListener("input", () => {
+      const val = input.value === "" ? 0 : Number(input.value);
+      const key = input.dataset.champNombre;
+      const regle = regles.find((r) => (r.prefixe && key.startsWith(r.prefixe)) || r.cle === key);
+      if (!regle) return;
+      if (regle.prefixe) regle.cb(key.replace(regle.prefixe, ""), val);
+      else regle.cb(val);
     });
   });
 }
@@ -483,20 +505,19 @@ function renderStepMateriel(el, { data, famille, resultats, ctx }) {
     if (f === "prescriptionActive") ctx.onChangePrescriptions("active", v);
     else ctx.onChangeInvestissements(f, v);
   });
-  el.querySelectorAll("[data-champ-nombre]").forEach((input) => {
-    input.addEventListener("focus", () => input.select());
-    input.addEventListener("input", () => {
-      const val = input.value === "" ? 0 : Number(input.value);
-      const key = input.dataset.champNombre;
-      if (key.startsWith("materiel_")) ctx.onChangeMaterielLive(key.replace("materiel_", ""), val);
-      else if (key.startsWith("gros_")) ctx.onChangeGrosMaterielLive(key.replace("gros_", ""), val);
-      else if (key === "mobilier") ctx.onChangeInvestissementsLive("mobilier", val);
-      else if (key === "ca_medicaments") ctx.onChangePharmacienLive("caMedicaments", val);
-      else if (key === "ca_parapharmacie") ctx.onChangePharmacienLive("caParapharmacie", val);
-      else if (key === "presc_medicaments") ctx.onChangePrescriptionsLive("depenseMedicaments", val);
-      else if (key === "presc_actes") ctx.onChangePrescriptionsLive("depenseActes", val);
-    });
-  });
+  // Distribution déclarative des champs numériques vers le bon callback,
+  // selon le préfixe de leur identifiant. Ajouter un nouveau champ de ce
+  // type ne demande qu'une ligne ici, plutôt que d'allonger une chaîne
+  // if/else — voir attacherChampsNombreDispatch ci-dessous.
+  attacherChampsNombreDispatch(el, [
+    { prefixe: "materiel_", cb: (id, v) => ctx.onChangeMaterielLive(id, v) },
+    { prefixe: "gros_", cb: (id, v) => ctx.onChangeGrosMaterielLive(id, v) },
+    { cle: "mobilier", cb: (v) => ctx.onChangeInvestissementsLive("mobilier", v) },
+    { cle: "ca_medicaments", cb: (v) => ctx.onChangePharmacienLive("caMedicaments", v) },
+    { cle: "ca_parapharmacie", cb: (v) => ctx.onChangePharmacienLive("caParapharmacie", v) },
+    { cle: "presc_medicaments", cb: (v) => ctx.onChangePrescriptionsLive("depenseMedicaments", v) },
+    { cle: "presc_actes", cb: (v) => ctx.onChangePrescriptionsLive("depenseActes", v) },
+  ]);
 }
 
 // --- Étape 6 : Alimentation --------------------------------------------------
@@ -617,6 +638,12 @@ export function renderResultats(root, ctx) {
         <div class="texte-discret" style="margin-bottom:14px;">Enregistrez ce bilan pour le retrouver plus tard et suivre son évolution dans le temps.</div>
         <button class="bouton bouton-primaire" id="btn-enregistrer-bilan" style="margin-right:10px;">Enregistrer ce bilan</button>
         <button class="bouton bouton-secondaire" id="btn-voir-historique">Voir mon historique</button>
+      </div>
+
+      <div class="carte" style="text-align:center; background:var(--couleur-primaire-fond); border-style:dashed;">
+        <div style="font-weight:700; font-size:14.5px; margin-bottom:6px;">🌍 Aller plus loin que le carbone</div>
+        <div class="texte-discret" style="margin-bottom:14px;">Le carbone n'est qu'une des dimensions de l'impact environnemental d'une activité. Découvrez les autres enjeux à connaître (eau, ressources, biodiversité...).</div>
+        <a href="les-autres-enjeux.html" class="bouton bouton-secondaire">Voir les autres enjeux ›</a>
       </div>
 
       <div style="text-align:center; margin-top:16px;"><button class="bouton-lien" id="btn-recommencer">↺ Recommencer une estimation</button></div>
